@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Freeform Reading Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07080b;
+        --ink: #f4f1e8;
+        --muted: #a8a29a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 16% 18%, rgba(84, 120, 128, 0.18), transparent 28rem),
+          radial-gradient(circle at 82% 78%, rgba(128, 88, 68, 0.14), transparent 30rem),
+          linear-gradient(135deg, #07080b 0%, #101116 48%, #08090d 100%);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        overscroll-behavior: none;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .viewport {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 25;
+        width: 176px;
+        height: 148px;
+        overflow: hidden;
+        border-radius: 12px;
+        cursor: default;
+        opacity: 0.98;
+        transition:
+          width 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
+          height 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
+          border-radius 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
+          opacity 260ms ease;
+        will-change: width, height;
+      }
+
+      .viewport.is-expanded,
+      .viewport.is-expanding {
+        left: 22px;
+        top: 22px;
+        width: auto;
+        height: auto;
+        border-radius: 18px;
+        cursor: grab;
+      }
+
+      .viewport.is-collapsing {
+        cursor: default;
+      }
+
+      .viewport.is-dragging {
+        cursor: grabbing;
+      }
+
+      .canvas {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 3000px;
+        height: 2000px;
+        transform: translate3d(-1450px, -760px, 0);
+        transform-style: flat;
+        will-change: transform;
+      }
+
+      .canvas::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        background-size: 120px 120px;
+        mask-image: radial-gradient(circle at center, black 0%, transparent 78%);
+        opacity: 0.34;
+      }
+
+      .card {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background: rgba(22, 24, 29, 0.88);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+        color: var(--ink);
+        backdrop-filter: blur(18px);
+        opacity: var(--card-opacity, 1);
+        pointer-events: var(--card-pointer-events, auto);
+        transform: translate3d(var(--stack-x, 0px), var(--stack-y, 0px), 0)
+          rotate(var(--active-r, var(--r, 0deg))) scale(var(--active-s, var(--s, 1)));
+        transform-origin: center;
+        transition:
+          transform 620ms cubic-bezier(0.2, 0.82, 0.18, 1),
+          opacity 420ms ease,
+          box-shadow 180ms ease,
+          border-color 180ms ease;
+        will-change: transform;
+      }
+
+      .viewport.is-expanded .card:hover {
+        z-index: 20;
+        transform: translate3d(var(--stack-x, 0px), var(--stack-y, 0px), 0)
+          rotate(var(--active-r, var(--r, 0deg))) scale(calc(var(--active-s, var(--s, 1)) + 0.035));
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .viewport.is-collapsed .card {
+        transition-duration: 560ms;
+      }
+
+      .viewport.is-collapsed .card,
+      .viewport.is-collapsing .card,
+      .viewport.is-expanding .card,
+      .viewport.is-expanded .card {
+        overflow: visible;
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+      }
+
+      .viewport.is-collapsed .card:nth-child(n + 6),
+      .viewport.is-collapsing .card:nth-child(n + 6) {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .card.is-hidden-in-stack {
+        display: none;
+      }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 42%);
+        opacity: 0.38;
+      }
+
+      .viewport.is-collapsed .card::after,
+      .viewport.is-collapsing .card::after,
+      .viewport.is-expanding .card::after,
+      .viewport.is-expanded .card::after {
+        display: none;
+      }
+
+      .sticky-shape,
+      .taped-shape {
+        position: absolute;
+        inset: 0;
+        display: none;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        pointer-events: none;
+        filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.34));
+      }
+
+      .viewport.is-collapsed .sticky-shape,
+      .viewport.is-collapsing .sticky-shape {
+        display: block;
+      }
+
+      .viewport.is-expanding .taped-shape,
+      .viewport.is-expanded .taped-shape {
+        display: block;
+        filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.38));
+        transition: filter 180ms ease;
+      }
+
+      .viewport.is-expanded .card:hover .taped-shape {
+        filter:
+          drop-shadow(0 0 13px rgba(255, 245, 188, 0.76))
+          drop-shadow(0 18px 28px rgba(0, 0, 0, 0.34));
+      }
+
+      .card-visual {
+        min-height: 46%;
+        background:
+          radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.42), transparent 12%),
+          linear-gradient(135deg, var(--a), var(--b) 48%, var(--c));
+      }
+
+      .viewport.is-collapsed .card-visual,
+      .viewport.is-collapsing .card-visual,
+      .viewport.is-expanding .card-visual,
+      .viewport.is-expanded .card-visual {
+        display: none;
+      }
+
+      .card-body {
+        position: relative;
+        z-index: 1;
+        padding: 18px;
+      }
+
+      .viewport.is-collapsed .card-body,
+      .viewport.is-collapsing .card-body,
+      .viewport.is-expanding .card-body,
+      .viewport.is-expanded .card-body {
+        display: none;
+      }
+
+      .card-kicker {
+        margin-bottom: 10px;
+        color: rgba(244, 241, 232, 0.56);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      .viewport.is-collapsed .card-kicker,
+      .viewport.is-collapsing .card-kicker,
+      .viewport.is-expanding .card-kicker,
+      .viewport.is-expanded .card-kicker {
+        margin-bottom: 7px;
+        color: rgba(48, 35, 56, 0.58);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+      }
+
+      .card-title {
+        margin: 0 0 12px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(20px, 2.3vw, 31px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .viewport.is-collapsed .card-title,
+      .viewport.is-collapsing .card-title,
+      .viewport.is-expanding .card-title,
+      .viewport.is-expanded .card-title {
+        margin-bottom: 6px;
+        color: rgba(31, 24, 35, 0.9);
+        font-size: 25px;
+        line-height: 0.95;
+      }
+
+      .card-text {
+        margin: 0;
+        color: rgba(244, 241, 232, 0.72);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .viewport.is-collapsed .card-text,
+      .viewport.is-collapsing .card-text,
+      .viewport.is-expanding .card-text,
+      .viewport.is-expanded .card-text {
+        max-width: 16ch;
+        color: rgba(36, 29, 40, 0.62);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .viewport.is-expanding .card-body,
+      .viewport.is-expanded .card-body {
+        justify-content: flex-start;
+        padding: 54px 34px 28px 34px;
+      }
+
+      .viewport.is-expanding .card-kicker,
+      .viewport.is-expanded .card-kicker {
+        color: rgba(49, 39, 54, 0.54);
+      }
+
+      .viewport.is-expanding .card-title,
+      .viewport.is-expanded .card-title {
+        font-size: clamp(22px, 2vw, 30px);
+      }
+
+      .viewport.is-expanding .card-text,
+      .viewport.is-expanded .card-text {
+        max-width: 24ch;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .preview {
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+        transition:
+          opacity 180ms ease,
+          transform 180ms ease;
+      }
+
+      .preview.is-open {
+        pointer-events: auto;
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      .veil {
+        pointer-events: none;
+        background:
+          linear-gradient(90deg, rgba(7, 8, 11, 0.96), transparent 13%, transparent 87%, rgba(7, 8, 11, 0.96)),
+          linear-gradient(0deg, rgba(7, 8, 11, 0.96), transparent 16%, transparent 84%, rgba(7, 8, 11, 0.96));
+      }
+
+      @media (max-width: 680px) {
+        .viewport {
+          right: 14px;
+          bottom: 14px;
+        }
+
+        .viewport.is-expanded,
+        .viewport.is-expanding {
+          left: 14px;
+          top: 14px;
+          width: auto;
+          height: auto;
+        }
+      }
+
+      #viewport.viewport.is-collapsed,
+      #viewport.viewport.is-collapsing {
+        width: 176px !important;
+        height: 148px !important;
+      }
+
+      #viewport.viewport.is-expanded,
+      #viewport.viewport.is-expanding {
+        left: 22px !important;
+        top: 22px !important;
+        width: auto !important;
+        height: auto !important;
+      }
+
+      @media (max-width: 680px) {
+        #viewport.viewport.is-collapsed,
+        #viewport.viewport.is-collapsing {
+          width: 156px !important;
+          height: 132px !important;
+        }
+
+        #viewport.viewport.is-expanded,
+        #viewport.viewport.is-expanding {
+          left: 14px !important;
+          top: 14px !important;
+          width: auto !important;
+          height: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="viewport" class="viewport" aria-label="Freeform swipeable reading canvas">
+      <section id="canvas" class="canvas" aria-live="polite"></section>
+    </main>
+
+    <div class="veil fixed inset-0"></div>
+
+    <header class="pointer-events-none fixed left-5 right-5 top-5 z-30 flex items-start justify-between gap-4 md:left-8 md:right-8 md:top-8">
+      <div>
+        <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-400">Reading Field</p>
+        <h1 class="max-w-[14rem] font-serif text-3xl leading-none text-stone-100 md:max-w-none md:text-5xl">
+          Freeform fragments
+        </h1>
+      </div>
+      <div class="hidden max-w-xs text-right text-sm leading-6 text-stone-400 md:block">
+        Swipe, wheel, or drag the surface. Click any fragment to open a reading preview.
+      </div>
+    </header>
+
+    <aside
+      id="preview"
+      class="preview fixed bottom-5 left-5 right-5 z-40 max-h-[68vh] overflow-auto rounded-lg border border-white/15 bg-[#111318]/95 p-5 shadow-2xl shadow-black/50 backdrop-blur-xl md:bottom-8 md:left-auto md:right-8 md:w-[440px] md:p-6"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="previewTitle"
+    >
+      <div class="mb-5 flex items-start justify-between gap-5">
+        <div>
+          <p id="previewKicker" class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-500"></p>
+          <h2 id="previewTitle" class="font-serif text-3xl leading-tight text-stone-100"></h2>
+        </div>
+        <button
+          id="closePreview"
+          class="pointer-events-auto grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/10 bg-white/5 text-xl leading-none text-stone-300 transition hover:bg-white/10"
+          aria-label="Close preview"
+        >
+          &times;
+        </button>
+      </div>
+      <p id="previewText" class="text-base leading-7 text-stone-300"></p>
+    </aside>
+
+    <script>
+      const allCards = [
+        ["Margin notes", "The page becomes a place when the eye can wander before it has to decide.", "Archive 01", 180, 110, 310, 250, -4, 1.02, "#344e41", "#6d9773", "#d9b26f"],
+        ["Unfinished atlas", "Small entries hold together by proximity, not order; a thought can sit beside weather, a street, a quote.", "Field note", 620, 260, 260, 330, 3, 0.96, "#263238", "#476a6f", "#c9b99b"],
+        ["Quiet index", "A scattered surface rewards partial attention. Reading becomes a search without a search box.", "Fragment", 1090, 80, 340, 230, -2, 1, "#394053", "#8b687f", "#e6c79c"],
+        ["Blue hour", "The best fragment is not complete; it leaves enough room for the next one to change it.", "Observation", 1600, 210, 280, 330, 5, 1.01, "#1c3144", "#596f62", "#d8c99b"],
+        ["Soft archive", "The surface remembers where things were, even when the path between them is improvised.", "Reading", 2110, 40, 330, 260, -5, 0.98, "#3f3f37", "#6b705c", "#cb997e"],
+        ["Afterimage", "To browse is to make temporary constellations from things that were not waiting to become a list.", "Image note", 2600, 180, 260, 290, 2, 1.03, "#2b2d42", "#7d8597", "#d6ccc2"],
+        ["Paper drift", "Each card is a stop, not a destination. The canvas should keep moving after the hand lets go.", "Motion", -130, 540, 330, 240, 4, 1, "#22333b", "#5e503f", "#eae0d5"],
+        ["Slow looking", "Fragments need silence around them. The gaps are part of the interface.", "Essay", 360, 760, 280, 330, -3, 0.98, "#253237", "#5c6b73", "#c2dfe3"],
+        ["Desk light", "A note seen at the edge can be more inviting than a note centered too politely.", "Clipping", 840, 620, 350, 250, 2, 1.01, "#3d405b", "#81b29a", "#f2cc8f"],
+        ["Loose map", "Movement is a way of editing attention: keep the friction low, but never let it feel weightless.", "Prototype", 1330, 560, 300, 300, -4, 1.03, "#2f3e46", "#52796f", "#cad2c5"],
+        ["Threshold", "Some text belongs half outside the viewport, making the screen feel less like a page and more like a window.", "Viewport", 1840, 650, 360, 240, 5, 0.97, "#353535", "#7d6b58", "#d9cab3"],
+        ["Cross current", "Diagonal gestures should not collapse into vertical habits. Let the hand draw its own route.", "Trackpad", 2350, 560, 300, 360, -2, 1, "#263a29", "#5f7a61", "#e1ca96"],
+        ["Untitled receipt", "A dense sentence can become visual material when placed with enough air around it.", "Scan", 2920, 710, 300, 220, 3, 0.98, "#372f2f", "#8a5a44", "#d5bdaf"],
+        ["Index card", "No snapping. The reader chooses when a fragment is centered, ignored, or revisited.", "Rule", 110, 1110, 280, 270, -1, 1.04, "#22223b", "#4a4e69", "#c9ada7"],
+        ["Weather margin", "The canvas should feel physical without pretending to be dimensional.", "Surface", 560, 1200, 330, 230, 4, 0.96, "#2d3142", "#4f5d75", "#bfc0c0"],
+        ["Open tab", "Reading systems often over-prescribe flow. This one only offers territory.", "Note", 1040, 1040, 290, 340, -5, 1, "#283618", "#606c38", "#dda15e"],
+        ["Small signal", "A visual index can be sparse and still full, if every piece has room to register.", "Index", 1530, 1120, 340, 250, 2, 1.02, "#354f52", "#84a98c", "#cad2c5"],
+        ["Side glance", "The edge of a card is an invitation to move, not an error to correct.", "Peripheral", 2060, 1060, 270, 330, -3, 0.98, "#3c1642", "#086375", "#affc41"],
+        ["Folded quote", "A fragment should make enough sense alone and more sense when it drifts near another.", "Quote", 2540, 1120, 350, 260, 4, 1.01, "#243b4a", "#6a8d92", "#e0fbfc"],
+        ["North room", "The canvas is larger than the argument. It can hold unfinished parts without making them provisional.", "Room", 3180, 1040, 260, 320, -4, 1, "#3a3042", "#5d5179", "#e5d4ed"],
+        ["Long shelf", "Position is memory. Returning to a card should feel like finding it on a table.", "Memory", -220, 1560, 370, 250, 5, 0.99, "#2b2c28", "#5c574f", "#d6d1b1"],
+        ["Faint title", "The eye likes variety: square, long, tall, bright, quiet, near, far.", "Composition", 290, 1650, 290, 300, -4, 1.02, "#473144", "#af1b3f", "#ccb69b"],
+        ["Reading path", "There is no next card, only another possible card. The interface should preserve that ambiguity.", "Flow", 760, 1510, 350, 240, 2, 0.96, "#393e41", "#587b7f", "#f4f1bb"],
+        ["Line break", "Fragments become legible through pace. Inertia supplies a small pause after action.", "Physics", 1280, 1530, 270, 340, -2, 1.04, "#222831", "#5b8e7d", "#f4d35e"],
+        ["Near silence", "The dark field is not a backdrop; it is the distance between pieces.", "Space", 1740, 1580, 320, 250, 3, 0.98, "#202c39", "#658e9c", "#f6f4d2"],
+        ["Found image", "A color block can stand in for a photograph when the prototype is about movement first.", "Placeholder", 2240, 1490, 290, 340, -5, 1, "#51291e", "#a63d40", "#e9b872"],
+        ["Loose leaf", "When everything is reachable, order can become optional without becoming absent.", "Leaf", 2750, 1590, 350, 240, 4, 1.02, "#1f363d", "#40798c", "#cfe0c3"],
+        ["Quiet proof", "A prototype is useful when its motion answers before the final frame does.", "Demo", 3340, 1500, 280, 300, -2, 0.97, "#30292f", "#413f54", "#d4bebe"],
+        ["Late window", "A card half seen is a promise that the field continues beyond the screen.", "Edge", 430, -170, 320, 230, 3, 1, "#2f243a", "#444054", "#fac9b8"],
+        ["Offset", "The reading field starts away from perfect center so the first movement already has context.", "Start", 1460, -140, 270, 300, -4, 1.03, "#1e2d2f", "#586f7c", "#b8dbd9"],
+        ["Southern note", "The bottom edge should not feel like the bottom of a document.", "Boundary", 1980, 1910, 360, 220, 2, 0.98, "#2b2118", "#6f4e37", "#e0c097"],
+        ["Far marker", "A distant fragment at the margin gives the surface a scale the viewport cannot show all at once.", "Scale", 3000, 1960, 330, 250, -3, 1, "#273043", "#9197ae", "#eff6ee"],
+      ];
+      const cards = allCards.slice(0, 6).map((card, index) => {
+        const expandedPositions = [
+          [1210, 600, 270, 300, -5, 1.02],
+          [1430, 560, 306, 306, 4, 1.12],
+          [1600, 650, 300, 280, -2, 1.01],
+          [1310, 820, 270, 320, 5, 0.99],
+          [1530, 840, 300, 300, -4, 1.03],
+          [1740, 790, 280, 310, 3, 1],
+        ];
+        const [x, y, width, height, rotation, scale] = expandedPositions[index];
+        return [card[0], card[1], card[2], x, y, width, height, rotation, scale, card[9], card[10], card[11]];
+      });
+
+      const viewport = document.getElementById("viewport");
+      const canvas = document.getElementById("canvas");
+      const preview = document.getElementById("preview");
+      const closePreview = document.getElementById("closePreview");
+      const previewKicker = document.getElementById("previewKicker");
+      const previewTitle = document.getElementById("previewTitle");
+      const previewText = document.getElementById("previewText");
+
+      let positionX = -1450;
+      let positionY = -760;
+      let velocityX = 0;
+      let velocityY = 0;
+      let targetVelocityX = 0;
+      let targetVelocityY = 0;
+      let isDragging = false;
+      let dragInput = null;
+      let lastPointerX = 0;
+      let lastPointerY = 0;
+      let lastPointerTime = 0;
+      let selectedCard = null;
+      let state = "collapsed";
+      let collapseTimer = 0;
+      let expandTimer = 0;
+      let collapseAfterWheelTimer = 0;
+      let lastWheelTime = 0;
+      let expandedSyncUntil = 0;
+      let lastExpandedLayoutSignature = "";
+
+      const friction = 0.92;
+      const damping = 0.22;
+      const wheelForce = 0.055;
+      const dragVelocityBoost = 0.9;
+      const stackCardCount = 5;
+      const collapseDelay = 800;
+      const wheelSettleDelay = 700;
+      const expandDuration = 640;
+      const collapseDuration = 580;
+      const stackLayouts = [
+        { x: 86, y: 74, rotation: -8, scale: 0.46, z: 5 },
+        { x: 98, y: 82, rotation: 5, scale: 0.43, z: 4 },
+        { x: 78, y: 88, rotation: -2, scale: 0.4, z: 3 },
+        { x: 106, y: 66, rotation: 11, scale: 0.36, z: 2 },
+        { x: 68, y: 70, rotation: -14, scale: 0.34, z: 1 },
+      ];
+      const stickyAssets = [
+        "assets/stickies/sticky-11.svg",
+        "assets/stickies/sticky-16.svg",
+        "assets/stickies/sticky-17.svg",
+        "assets/stickies/sticky-18.svg",
+        "assets/stickies/sticky-19.svg",
+        "assets/stickies/sticky-20.svg",
+      ];
+      const tapedAssets = [
+        "assets/taped-stickies/taped-2.svg",
+        "assets/taped-stickies/taped-3.svg",
+        "assets/taped-stickies/taped-4.svg",
+        "assets/taped-stickies/taped-5.svg",
+        "assets/taped-stickies/taped-8.svg",
+        "assets/taped-stickies/taped-9.svg",
+      ];
+      const expandedClusters = [
+        [1010, 520],
+        [1410, 505],
+        [1815, 545],
+        [1055, 930],
+        [1470, 900],
+        [1875, 935],
+      ];
+
+      function randomBetween(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function shuffledCopy(items) {
+        const result = [...items];
+        for (let index = result.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(Math.random() * (index + 1));
+          [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+        }
+        return result;
+      }
+
+      function distanceBetween(a, b) {
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      }
+
+      function boxesOverlap(a, b, padding = 34) {
+        return !(
+          a.x + a.width + padding < b.x ||
+          b.x + b.width + padding < a.x ||
+          a.y + a.height + padding < b.y ||
+          b.y + b.height + padding < a.y
+        );
+      }
+
+      function buildRandomExpandedLayout() {
+        const slots = shuffledCopy(expandedClusters);
+        const placed = [];
+        const layout = [];
+
+        cards.forEach((card, index) => {
+          const [baseX, baseY] = slots[index];
+          const width = index === 1 ? 306 : [270, 300, 270, 300, 280][Math.max(0, index - 1)] || 280;
+          const height = index === 1 ? 306 : [300, 280, 320, 300, 310][Math.max(0, index - 1)] || 300;
+          const rotation = randomBetween(-8, 8);
+          const scale = index === 1 ? randomBetween(1.12, 1.18) : randomBetween(0.96, 1.06);
+          let x = baseX + randomBetween(-34, 34);
+          let y = baseY + randomBetween(-30, 30);
+
+          for (let attempt = 0; attempt < 16; attempt += 1) {
+            const candidate = {
+              x: baseX + randomBetween(-38, 38),
+              y: baseY + randomBetween(-32, 32),
+              width: width * scale,
+              height: height * scale,
+            };
+            const farEnough = placed.every((point) => !boxesOverlap(candidate, point));
+            if (farEnough) {
+              x = candidate.x;
+              y = candidate.y;
+              break;
+            }
+          }
+
+          layout.push({
+            x: Math.round(x),
+            y: Math.round(y),
+            width,
+            height,
+            rotation: Number(rotation.toFixed(2)),
+            scale: Number(scale.toFixed(2)),
+          });
+          placed.push({ index, x, y, width: width * scale, height: height * scale });
+        });
+
+        return layout;
+      }
+
+      function randomizeExpandedLayout() {
+        let layout = buildRandomExpandedLayout();
+        let signature = layout.map((item) => `${item.x},${item.y}`).join("|");
+
+        for (let attempt = 0; signature === lastExpandedLayoutSignature && attempt < 8; attempt += 1) {
+          layout = buildRandomExpandedLayout();
+          signature = layout.map((item) => `${item.x},${item.y}`).join("|");
+        }
+
+        lastExpandedLayoutSignature = signature;
+
+        cards.forEach((card, index) => {
+          const item = layout[index];
+          card[3] = item.x;
+          card[4] = item.y;
+          card[5] = item.width;
+          card[6] = item.height;
+          card[7] = item.rotation;
+          card[8] = item.scale;
+        });
+
+        [...canvas.children].forEach((card, index) => {
+          card.style.left = `${cards[index][3]}px`;
+          card.style.top = `${cards[index][4]}px`;
+          card.style.width = `${cards[index][5]}px`;
+          card.style.height = `${cards[index][6]}px`;
+          card.style.setProperty("--r", `${cards[index][7]}deg`);
+          card.style.setProperty("--s", cards[index][8]);
+          card.style.zIndex = 10 + Math.floor(Math.random() * 14);
+        });
+      }
+
+      function createCard(card, index) {
+        const [title, text, kicker, x, y, width, height, rotation, scale, colorA, colorB, colorC] = card;
+        const article = document.createElement("article");
+        article.className = "card";
+        article.style.left = `${x}px`;
+        article.style.top = `${y}px`;
+        article.style.width = `${width}px`;
+        article.style.height = `${height}px`;
+        article.style.setProperty("--r", `${rotation}deg`);
+        article.style.setProperty("--s", scale);
+        article.style.setProperty("--a", colorA);
+        article.style.setProperty("--b", colorB);
+        article.style.setProperty("--c", colorC);
+        article.style.zIndex = cards.length - index;
+        article.tabIndex = 0;
+        article.dataset.index = index;
+        article.innerHTML = `
+          <img class="sticky-shape" src="${stickyAssets[index % stickyAssets.length]}" alt="" aria-hidden="true" />
+          <img class="taped-shape" src="${tapedAssets[index % tapedAssets.length]}" alt="" aria-hidden="true" />
+          <div class="card-visual"></div>
+          <div class="card-body">
+            <p class="card-kicker">${kicker}</p>
+            <h2 class="card-title">${title}</h2>
+            <p class="card-text">${text}</p>
+          </div>
+        `;
+        article.addEventListener("click", () => openPreview(index));
+        article.addEventListener("mouseenter", () => {
+          if (state !== "expanded") return;
+          const rotation = cards[index][7];
+          const scale = cards[index][8] + 0.035;
+          article.style.transform = `translate3d(0px, 0px, 0) rotate(${rotation}deg) scale(${scale})`;
+          article.style.zIndex = 80;
+        });
+        article.addEventListener("mouseleave", () => {
+          if (state !== "expanded") return;
+          applyExpandedCardTransform(article, index);
+        });
+        article.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openPreview(index);
+          }
+        });
+        canvas.appendChild(article);
+      }
+
+      function setWidgetState(nextState) {
+        state = nextState;
+        const isWide = window.innerWidth > 680;
+        const collapsedWidth = isWide ? 176 : 156;
+        const collapsedHeight = isWide ? 148 : 132;
+        const edge = isWide ? 22 : 14;
+
+        if (state === "expanded" || state === "expanding") {
+          viewport.style.setProperty("left", `${edge}px`, "important");
+          viewport.style.setProperty("right", `${edge}px`, "important");
+          viewport.style.setProperty("top", `${edge}px`, "important");
+          viewport.style.setProperty("bottom", `${edge}px`, "important");
+          viewport.style.setProperty("width", "auto", "important");
+          viewport.style.setProperty("height", "auto", "important");
+        } else {
+          viewport.style.setProperty("left", "auto", "important");
+          viewport.style.setProperty("top", "auto", "important");
+          viewport.style.setProperty("right", `${edge}px`, "important");
+          viewport.style.setProperty("bottom", `${edge}px`, "important");
+          viewport.style.setProperty("width", `${collapsedWidth}px`, "important");
+          viewport.style.setProperty("height", `${collapsedHeight}px`, "important");
+        }
+
+        viewport.classList.toggle("is-collapsed", state === "collapsed");
+        viewport.classList.toggle("is-expanding", state === "expanding");
+        viewport.classList.toggle("is-expanded", state === "expanded");
+        viewport.classList.toggle("is-collapsing", state === "collapsing");
+
+        if (state === "expanded") {
+          expandedSyncUntil = performance.now() + 900;
+          applyExpandedTransforms(true);
+        }
+        if (state === "collapsed") applyStackTransforms();
+      }
+
+      function canPan() {
+        return state === "expanded";
+      }
+
+      function clearCollapseTimer() {
+        window.clearTimeout(collapseTimer);
+        collapseTimer = 0;
+      }
+
+      function getCardBaseRect(card) {
+        return {
+          x: Number(card.style.left.replace("px", "")),
+          y: Number(card.style.top.replace("px", "")),
+          width: Number(card.style.width.replace("px", "")),
+          height: Number(card.style.height.replace("px", "")),
+        };
+      }
+
+      function applyStackTransforms() {
+        const viewportWidth = viewport.clientWidth;
+        const viewportHeight = viewport.clientHeight;
+        const centerX = viewportWidth / 2 + positionX;
+        const centerY = viewportHeight / 2 + positionY;
+
+        [...canvas.children].forEach((card, index) => {
+          const base = getCardBaseRect(card);
+          const currentCenterX = centerX + base.x + base.width / 2;
+          const currentCenterY = centerY + base.y + base.height / 2;
+          const stack = stackLayouts[index] || stackLayouts[stackLayouts.length - 1];
+          const desiredX = Math.min(viewportWidth - 64, stack.x);
+          const desiredY = Math.min(viewportHeight - 56, stack.y);
+          const isStackCard = index < stackCardCount;
+
+          card.style.setProperty("--stack-x", `${desiredX - currentCenterX}px`);
+          card.style.setProperty("--stack-y", `${desiredY - currentCenterY}px`);
+          card.style.setProperty("--active-r", `${stack.rotation}deg`);
+          card.style.setProperty("--active-s", isStackCard ? stack.scale : 0.12);
+          card.style.setProperty("--card-opacity", isStackCard ? 1 : 0);
+          card.style.setProperty("--card-pointer-events", isStackCard ? "auto" : "none");
+          card.style.opacity = isStackCard ? "1" : "0";
+          card.style.transform = `translate3d(${desiredX - currentCenterX}px, ${desiredY - currentCenterY}px, 0) rotate(${stack.rotation}deg) scale(${isStackCard ? stack.scale : 0.12})`;
+          card.style.zIndex = isStackCard ? stack.z : 0;
+          card.tabIndex = isStackCard ? 0 : -1;
+          card.classList.toggle("is-hidden-in-stack", state === "collapsed" && !isStackCard);
+        });
+      }
+
+      function applyExpandedCardTransform(card, index) {
+        const rotation = cards[index][7];
+        const scale = cards[index][8];
+        card.style.transform = `translate3d(0px, 0px, 0) rotate(${rotation}deg) scale(${scale})`;
+        card.style.zIndex = cards.length - index;
+      }
+
+      function applyExpandedTransforms(commit = false) {
+        if (commit) {
+          [...canvas.children].forEach((card) => {
+            card.style.transition = "none";
+          });
+        }
+
+        [...canvas.children].forEach((card, index) => {
+          const rotation = cards[index][7];
+          const scale = cards[index][8];
+          card.style.setProperty("--stack-x", "0px");
+          card.style.setProperty("--stack-y", "0px");
+          card.style.setProperty("--active-r", `${rotation}deg`);
+          card.style.setProperty("--active-s", scale);
+          card.style.setProperty("--card-opacity", 1);
+          card.style.setProperty("--card-pointer-events", "auto");
+          card.style.opacity = "1";
+          applyExpandedCardTransform(card, index);
+          card.tabIndex = 0;
+          card.classList.remove("is-hidden-in-stack");
+        });
+
+        if (commit) {
+          void canvas.offsetWidth;
+          [...canvas.children].forEach((card) => {
+            card.style.transition = "";
+          });
+        }
+      }
+
+      function expandWidget() {
+        if (state === "expanded" || state === "expanding") return;
+        clearCollapseTimer();
+        window.clearTimeout(expandTimer);
+        randomizeExpandedLayout();
+        setWidgetState("expanding");
+        applyStackTransforms();
+        void canvas.offsetWidth;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            applyExpandedTransforms();
+          });
+        });
+        expandTimer = window.setTimeout(() => {
+          if (state !== "expanding") return;
+          setWidgetState("expanded");
+          applyExpandedTransforms();
+        }, expandDuration);
+      }
+
+      function collapseWidget() {
+        if (state === "collapsed" || state === "collapsing") return;
+        if (isDragging) {
+          scheduleCollapse();
+          return;
+        }
+        const wheelAge = performance.now() - lastWheelTime;
+        if (wheelAge < wheelSettleDelay) {
+          window.clearTimeout(collapseAfterWheelTimer);
+          collapseAfterWheelTimer = window.setTimeout(collapseWidget, wheelSettleDelay - wheelAge);
+          return;
+        }
+
+        hidePreview();
+        velocityX = 0;
+        velocityY = 0;
+        targetVelocityX = 0;
+        targetVelocityY = 0;
+        setWidgetState("collapsing");
+        applyStackTransforms();
+        window.setTimeout(() => {
+          if (state !== "collapsing") return;
+          setWidgetState("collapsed");
+          applyStackTransforms();
+        }, collapseDuration);
+      }
+
+      function scheduleCollapse() {
+        clearCollapseTimer();
+        collapseTimer = window.setTimeout(collapseWidget, collapseDelay);
+      }
+
+      function isInsideViewport(clientX, clientY) {
+        const rect = viewport.getBoundingClientRect();
+        return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+      }
+
+      function trackWidgetPointer(event) {
+        if (isInsideViewport(event.clientX, event.clientY)) {
+          clearCollapseTimer();
+          if (state === "collapsed") expandWidget();
+          return;
+        }
+
+        if (state === "expanded" || state === "expanding") {
+          scheduleCollapse();
+        }
+      }
+
+      function openPreview(index) {
+        if (state !== "expanded") return;
+        selectedCard = cards[index];
+        const [title, text, kicker] = selectedCard;
+        previewKicker.textContent = kicker;
+        previewTitle.textContent = title;
+        previewText.textContent =
+          `${text} The prototype keeps this panel deliberately simple: selection gives the fragment a readable place without reorganizing the field or snapping the canvas to a prescribed route.`;
+        preview.classList.add("is-open");
+      }
+
+      function hidePreview() {
+        preview.classList.remove("is-open");
+        selectedCard = null;
+      }
+
+      function onWheel(event) {
+        event.preventDefault();
+        if (!canPan()) {
+          expandWidget();
+          return;
+        }
+        lastWheelTime = performance.now();
+        clearCollapseTimer();
+        targetVelocityX += event.deltaX * wheelForce;
+        targetVelocityY += event.deltaY * wheelForce;
+      }
+
+      function onPointerDown(event) {
+        if (!canPan()) {
+          expandWidget();
+          return;
+        }
+        if (event.button !== 0) return;
+        isDragging = true;
+        dragInput = event.pointerId !== undefined ? "pointer" : "mouse";
+        viewport.classList.add("is-dragging");
+        if (event.pointerId !== undefined) viewport.setPointerCapture(event.pointerId);
+        lastPointerX = event.clientX;
+        lastPointerY = event.clientY;
+        lastPointerTime = performance.now();
+        velocityX = 0;
+        velocityY = 0;
+        targetVelocityX = 0;
+        targetVelocityY = 0;
+      }
+
+      function onPointerMove(event) {
+        if (!isDragging) return;
+        if (dragInput === "pointer" && event.pointerId === undefined) return;
+        if (dragInput === "mouse" && event.pointerId !== undefined) return;
+        const now = performance.now();
+        const deltaX = event.clientX - lastPointerX;
+        const deltaY = event.clientY - lastPointerY;
+        const elapsed = Math.max(16, now - lastPointerTime);
+
+        positionX += deltaX;
+        positionY += deltaY;
+        velocityX = (deltaX / elapsed) * 16 * dragVelocityBoost;
+        velocityY = (deltaY / elapsed) * 16 * dragVelocityBoost;
+
+        lastPointerX = event.clientX;
+        lastPointerY = event.clientY;
+        lastPointerTime = now;
+      }
+
+      function onPointerUp(event) {
+        if (!isDragging) return;
+        if (dragInput === "pointer" && event.pointerId === undefined) return;
+        if (dragInput === "mouse" && event.pointerId !== undefined) return;
+        isDragging = false;
+        dragInput = null;
+        viewport.classList.remove("is-dragging");
+        if (event.pointerId !== undefined) viewport.releasePointerCapture(event.pointerId);
+      }
+
+      function animate() {
+        if (state === "expanded" && performance.now() < expandedSyncUntil) {
+          applyExpandedTransforms();
+        }
+
+        velocityX += (targetVelocityX - velocityX) * damping;
+        velocityY += (targetVelocityY - velocityY) * damping;
+
+        positionX += velocityX;
+        positionY += velocityY;
+
+        velocityX *= friction;
+        velocityY *= friction;
+        targetVelocityX *= friction;
+        targetVelocityY *= friction;
+
+        if (Math.abs(velocityX) < 0.001) velocityX = 0;
+        if (Math.abs(velocityY) < 0.001) velocityY = 0;
+        if (Math.abs(targetVelocityX) < 0.001) targetVelocityX = 0;
+        if (Math.abs(targetVelocityY) < 0.001) targetVelocityY = 0;
+
+        canvas.style.transform = `translate3d(${positionX}px, ${positionY}px, 0)`;
+        requestAnimationFrame(animate);
+      }
+
+      cards.forEach(createCard);
+      setWidgetState("collapsed");
+      applyStackTransforms();
+
+      viewport.addEventListener("wheel", onWheel, { passive: false });
+      viewport.addEventListener("pointerdown", onPointerDown);
+      viewport.addEventListener("pointermove", onPointerMove);
+      viewport.addEventListener("pointerup", onPointerUp);
+      viewport.addEventListener("pointercancel", onPointerUp);
+      viewport.addEventListener("mousedown", onPointerDown);
+      window.addEventListener("mousemove", onPointerMove);
+      window.addEventListener("mouseup", onPointerUp);
+      viewport.addEventListener("mouseenter", expandWidget);
+      viewport.addEventListener("mouseleave", scheduleCollapse);
+      viewport.addEventListener("pointerenter", clearCollapseTimer);
+      viewport.addEventListener("pointerleave", scheduleCollapse);
+      window.addEventListener("mousemove", trackWidgetPointer);
+      window.addEventListener("pointermove", trackWidgetPointer);
+      closePreview.addEventListener("click", hidePreview);
+      window.addEventListener("resize", () => {
+        setWidgetState(state);
+        if (state === "collapsed" || state === "collapsing") applyStackTransforms();
+      });
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") hidePreview();
+      });
+
+      window.readingCanvasDebug = {
+        get state() {
+          return {
+            positionX,
+            positionY,
+            velocityX,
+            velocityY,
+            targetVelocityX,
+            targetVelocityY,
+            state,
+            selectedCard: selectedCard?.[0] ?? null,
+          };
+        },
+      };
+
+      requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>
