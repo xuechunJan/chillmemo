@@ -298,6 +298,94 @@
         transform: translate(-50%, 0) scale(1);
       }
 
+      .delete-popover {
+        position: fixed;
+        z-index: 180;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -8px) scale(0.96);
+        transition:
+          opacity 140ms ease,
+          transform 140ms ease;
+      }
+
+      .delete-popover.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, -12px) scale(1);
+      }
+
+      .delete-trigger {
+        border: 0;
+        border-radius: 999px;
+        background: rgba(210, 38, 38, 0.96);
+        color: white;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+        padding: 9px 13px;
+      }
+
+      .delete-dialog-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 220;
+        display: none;
+        place-items: center;
+        background: rgba(0, 0, 0, 0.18);
+      }
+
+      .delete-dialog-backdrop.is-visible {
+        display: grid;
+      }
+
+      .delete-dialog {
+        width: min(320px, calc(100vw - 40px));
+        border-radius: 14px;
+        background: rgba(246, 246, 246, 0.96);
+        color: #111111;
+        padding: 20px;
+      }
+
+      .delete-dialog-title {
+        margin: 0 0 8px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .delete-dialog-text {
+        margin: 0 0 18px;
+        color: rgba(17, 17, 17, 0.68);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .delete-dialog-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .delete-dialog-actions button {
+        border: 0;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 10px 12px;
+      }
+
+      .confirm-delete {
+        background: #d92d20;
+        color: white;
+      }
+
+      .cancel-delete {
+        background: #d8d8d8;
+        color: #2a2a2a;
+      }
+
       .editor-layer,
       .polaroid-photo {
         position: absolute;
@@ -518,6 +606,20 @@
       <input id="photoInput" class="photo-input" type="file" accept="image/png,image/jpeg" tabindex="-1" />
     </main>
     <div id="limitToast" class="limit-toast" role="status" aria-live="polite">数量已达上限</div>
+    <div id="deletePopover" class="delete-popover">
+      <button id="deleteTrigger" class="delete-trigger" type="button">删除</button>
+    </div>
+
+    <div id="deleteDialogBackdrop" class="delete-dialog-backdrop" role="presentation">
+      <section class="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteDialogTitle">
+        <h2 id="deleteDialogTitle" class="delete-dialog-title">彻底删除这个元素？</h2>
+        <p class="delete-dialog-text">删除后，这个元素和其中的内容将从当前画布中移除。</p>
+        <div class="delete-dialog-actions">
+          <button id="confirmDelete" class="confirm-delete" type="button">删除</button>
+          <button id="cancelDelete" class="cancel-delete" type="button">取消</button>
+        </div>
+      </section>
+    </div>
 
     <div class="veil fixed inset-0"></div>
 
@@ -609,6 +711,11 @@
       const addPlus = document.getElementById("addPlus");
       const photoInput = document.getElementById("photoInput");
       const limitToast = document.getElementById("limitToast");
+      const deletePopover = document.getElementById("deletePopover");
+      const deleteTrigger = document.getElementById("deleteTrigger");
+      const deleteDialogBackdrop = document.getElementById("deleteDialogBackdrop");
+      const confirmDelete = document.getElementById("confirmDelete");
+      const cancelDelete = document.getElementById("cancelDelete");
       const preview = document.getElementById("preview");
       const closePreview = document.getElementById("closePreview");
       const previewKicker = document.getElementById("previewKicker");
@@ -647,6 +754,7 @@
       let photoTargetIndex = null;
       let isPhotoPickerOpen = false;
       let preventCollapseUntil = 0;
+      let pendingDeleteIndex = null;
       let selectedCard = null;
       let state = "collapsed";
       let collapseTimer = 0;
@@ -795,6 +903,106 @@
         toastTimer = window.setTimeout(() => {
           limitToast.classList.remove("is-visible");
         }, 1600);
+      }
+
+      function hideDeletePopover() {
+        deletePopover.classList.remove("is-visible");
+      }
+
+      function hideDeleteDialog() {
+        deleteDialogBackdrop.classList.remove("is-visible");
+      }
+
+      function showDeletePopover(index, event) {
+        if (state !== "expanded" || !addedCardIndexes.includes(index)) return;
+        if (!isPointOnVisibleElement(event.clientX, event.clientY)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        clearCollapseTimer();
+        pendingDeleteIndex = index;
+        const x = Math.max(54, Math.min(window.innerWidth - 54, event.clientX));
+        const y = Math.max(38, Math.min(window.innerHeight - 12, event.clientY));
+        deletePopover.style.left = `${x}px`;
+        deletePopover.style.top = `${y}px`;
+        deletePopover.classList.add("is-visible");
+      }
+
+      function showDeleteDialog() {
+        if (pendingDeleteIndex === null) return;
+        hideDeletePopover();
+        clearCollapseTimer();
+        deleteDialogBackdrop.classList.add("is-visible");
+        confirmDelete.focus();
+      }
+
+      function clearDeletedCard(index) {
+        const card = canvas.children[index];
+        if (!card) return;
+
+        const editor = card.querySelector(".editor-layer");
+        if (editor) {
+          editor.value = "";
+          storeEditorState(editor);
+          fitEditorText(editor);
+        }
+
+        const photo = card.querySelector(".polaroid-photo");
+        if (photo) photo.removeAttribute("src");
+
+        const photoUrl = photoUrls.get(index);
+        if (photoUrl) URL.revokeObjectURL(photoUrl);
+        photoUrls.delete(index);
+      }
+
+      function removeAddedCard(index) {
+        if (!addedCardIndexes.includes(index)) return;
+
+        if (activeStickySlots.includes(index)) {
+          const stickySrc = canvas.children[index]?.querySelector(".sticky-shape")?.getAttribute("src") ?? "";
+          const assetIndex = stickyAssets.slice(0, maxStickyCount).findIndex((src) => src === stickySrc);
+          if (assetIndex >= 0) usedStickyAssetIndexes = usedStickyAssetIndexes.filter((item) => item !== assetIndex);
+          activeStickySlots = activeStickySlots.filter((item) => item !== index);
+        }
+
+        if (activePolaroidSlots.includes(index)) {
+          activePolaroidSlots = activePolaroidSlots.filter((item) => item !== index);
+        }
+
+        addedCardIndexes = addedCardIndexes.filter((item) => item !== index);
+        clearDeletedCard(index);
+
+        const card = canvas.children[index];
+        if (card) {
+          card.classList.remove("is-added-sticky", "is-added-polaroid", "is-active-sticky", "is-active-polaroid", "is-element-dragging");
+          card.style.opacity = "0";
+          card.style.setProperty("--card-opacity", 0);
+          card.style.setProperty("--card-pointer-events", "none");
+        }
+
+        if (!addedCardIndexes.length) {
+          resetToInitialCollapsed();
+          return;
+        }
+
+        activeCardIndex = addedCardIndexes[addedCardIndexes.length - 1];
+        activeKind = activePolaroidSlots.includes(activeCardIndex) ? "polaroid" : "sticky";
+        syncAddInteractionClasses();
+        applyExpandedTransforms(true);
+      }
+
+      function confirmDeleteElement() {
+        if (pendingDeleteIndex === null) return;
+        const index = pendingDeleteIndex;
+        pendingDeleteIndex = null;
+        hideDeleteDialog();
+        hideDeletePopover();
+        removeAddedCard(index);
+      }
+
+      function cancelDeleteElement() {
+        pendingDeleteIndex = null;
+        hideDeleteDialog();
+        hideDeletePopover();
       }
 
       function getNextStickyAssetIndex(preferredIndex = activeStickyAssetIndex) {
@@ -1102,6 +1310,7 @@
         `;
         setupEditor(article.querySelector(".editor-layer"));
         article.addEventListener("click", (event) => handleCardClick(index, event));
+        article.addEventListener("contextmenu", (event) => showDeletePopover(index, event));
         article.addEventListener("mouseenter", () => {
           if (state !== "expanded") return;
           if (addedCardIndexes.includes(index)) clearCollapseTimer();
@@ -1329,6 +1538,8 @@
       function expandWidget() {
         if (state === "expanded" || state === "expanding") return;
         clearCollapseTimer();
+        hideDeletePopover();
+        hideDeleteDialog();
         window.clearTimeout(expandTimer);
         randomizeExpandedLayout();
         setWidgetState("expanding");
@@ -1361,6 +1572,9 @@
         }
 
         hidePreview();
+        hideDeletePopover();
+        hideDeleteDialog();
+        pendingDeleteIndex = null;
         velocityX = 0;
         velocityY = 0;
         targetVelocityX = 0;
@@ -1532,6 +1746,7 @@
       function handleCardClick(index, event) {
         currentPointerX = event.clientX;
         currentPointerY = event.clientY;
+        hideDeletePopover();
         const clickedCard = canvas.children[index];
         const clickedTapedSrc = clickedCard?.querySelector(".taped-shape")?.getAttribute("src") ?? "";
         const clickedStickySrc = clickedCard?.querySelector(".sticky-shape")?.getAttribute("src") ?? "";
@@ -1605,9 +1820,11 @@
         }
 
         if (state !== "expanded") return;
+        if (event.target.closest(".delete-popover") || event.target.closest(".delete-dialog-backdrop")) return;
         if (isPhotoPickerOpen || performance.now() < preventCollapseUntil) return;
         if (event.target.closest(".add-plus")) return;
         if (pointerDownOnVisibleElement || isPointOnVisibleElement(event.clientX, event.clientY)) return;
+        hideDeletePopover();
         collapseWidget();
       }
 
@@ -1973,6 +2190,21 @@
       window.addEventListener("mousemove", trackWidgetPointer);
       window.addEventListener("pointermove", trackWidgetPointer);
       addPlus.addEventListener("click", beginChoosing);
+      deleteTrigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        showDeleteDialog();
+      });
+      confirmDelete.addEventListener("click", (event) => {
+        event.stopPropagation();
+        confirmDeleteElement();
+      });
+      cancelDelete.addEventListener("click", (event) => {
+        event.stopPropagation();
+        cancelDeleteElement();
+      });
+      deleteDialogBackdrop.addEventListener("click", (event) => {
+        if (event.target === deleteDialogBackdrop) cancelDeleteElement();
+      });
       photoInput.addEventListener("change", () => {
         const file = photoInput.files?.[0];
         isPhotoPickerOpen = false;
@@ -1989,7 +2221,10 @@
         if (state === "collapsed" || state === "collapsing") applyStackTransforms();
       });
       window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") hidePreview();
+        if (event.key === "Escape") {
+          cancelDeleteElement();
+          hidePreview();
+        }
       });
 
       window.readingCanvasDebug = {
