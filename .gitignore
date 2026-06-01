@@ -1,0 +1,6 @@
+node_modules/
+dist/
+build/logo.svg.png
+build/icon.iconset/
+*.log
+.DS_Store

@@ -8,7 +8,7 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #07080b;
+        --bg: transparent;
         --ink: #f4f1e8;
         --muted: #a8a29a;
       }
@@ -23,10 +23,7 @@
         height: 100%;
         margin: 0;
         overflow: hidden;
-        background:
-          radial-gradient(circle at 16% 18%, rgba(84, 120, 128, 0.18), transparent 28rem),
-          radial-gradient(circle at 82% 78%, rgba(128, 88, 68, 0.14), transparent 30rem),
-          linear-gradient(135deg, #07080b 0%, #101116 48%, #08090d 100%);
+        background: var(--bg);
         font-family:
           Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
@@ -39,8 +36,8 @@
 
       .viewport {
         position: fixed;
-        right: 22px;
-        bottom: 22px;
+        left: 0;
+        top: 0;
         z-index: 25;
         width: 176px;
         height: 148px;
@@ -49,17 +46,19 @@
         cursor: default;
         opacity: 0.98;
         transition:
+          left 260ms cubic-bezier(0.2, 0.8, 0.18, 1),
+          top 260ms cubic-bezier(0.2, 0.8, 0.18, 1),
           width 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
           height 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
           border-radius 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
           opacity 260ms ease;
-        will-change: width, height;
+        will-change: left, top, width, height;
       }
 
       .viewport.is-expanded,
       .viewport.is-expanding {
-        left: 22px;
-        top: 22px;
+        left: 0;
+        top: 0;
         width: auto;
         height: auto;
         border-radius: 18px;
@@ -74,6 +73,15 @@
         cursor: grabbing;
       }
 
+      .viewport.is-collapsed-widget-dragging {
+        cursor: grabbing;
+        transition:
+          width 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
+          height 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
+          border-radius 620ms cubic-bezier(0.2, 0.8, 0.18, 1),
+          opacity 260ms ease;
+      }
+
       .canvas {
         position: absolute;
         left: 50%;
@@ -86,7 +94,7 @@
       }
 
       .canvas::before {
-        content: "";
+        content: none;
         position: absolute;
         inset: 0;
         pointer-events: none;
@@ -107,7 +115,7 @@
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 8px;
         background: rgba(22, 24, 29, 0.88);
-        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+        box-shadow: none;
         color: var(--ink);
         backdrop-filter: blur(18px);
         opacity: var(--card-opacity, 1);
@@ -118,7 +126,6 @@
         transition:
           transform 620ms cubic-bezier(0.2, 0.82, 0.18, 1),
           opacity 420ms ease,
-          box-shadow 180ms ease,
           border-color 180ms ease;
         will-change: transform;
       }
@@ -133,13 +140,8 @@
 
       .viewport.is-expanded .card.is-element-dragging {
         cursor: grabbing;
-        transition:
-          transform 180ms cubic-bezier(0.2, 1.4, 0.24, 1),
-          filter 180ms ease;
-        filter:
-          drop-shadow(0 0 14px rgba(245, 245, 245, 0.66))
-          drop-shadow(0 0 2px rgba(32, 32, 32, 0.78))
-          drop-shadow(0 20px 30px rgba(0, 0, 0, 0.34));
+        transition: transform 180ms cubic-bezier(0.2, 1.4, 0.24, 1);
+        filter: none;
       }
 
       .viewport.is-collapsed .card {
@@ -191,7 +193,7 @@
         height: 100%;
         object-fit: fill;
         pointer-events: none;
-        filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.34));
+        filter: none;
       }
 
       .viewport.is-collapsed .sticky-shape,
@@ -207,21 +209,18 @@
       .viewport.is-expanding .taped-shape,
       .viewport.is-expanded .taped-shape {
         display: block;
-        filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.38));
+        filter: none;
         transition: filter 180ms ease;
       }
 
       .viewport.is-collapsed.is-limit-stack .taped-shape,
       .viewport.is-collapsing.is-limit-stack .taped-shape {
         display: block;
-        filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.38));
+        filter: none;
       }
 
       .viewport.is-expanded .card:hover .taped-shape {
-        filter:
-          drop-shadow(0 0 12px rgba(245, 245, 245, 0.58))
-          drop-shadow(0 0 2px rgba(28, 28, 28, 0.72))
-          drop-shadow(0 18px 28px rgba(0, 0, 0, 0.34));
+        filter: none;
       }
 
       .add-plus {
@@ -236,7 +235,7 @@
         border: 0;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+        box-shadow: none;
         cursor: pointer;
         font-size: 22px;
         line-height: 1;
@@ -262,9 +261,7 @@
       }
 
       .add-plus:hover {
-        filter:
-          drop-shadow(0 0 10px rgba(245, 245, 245, 0.66))
-          drop-shadow(0 0 2px rgba(28, 28, 28, 0.72));
+        filter: none;
       }
 
       .photo-input {
@@ -285,7 +282,7 @@
         padding: 10px 16px;
         border-radius: 999px;
         background: rgba(18, 18, 22, 0.9);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.38);
+        box-shadow: none;
         color: rgba(255, 250, 230, 0.96);
         font-size: 14px;
         opacity: 0;
@@ -453,22 +450,16 @@
       }
 
       .veil {
+        display: none;
         pointer-events: none;
-        background:
-          linear-gradient(90deg, rgba(7, 8, 11, 0.96), transparent 13%, transparent 87%, rgba(7, 8, 11, 0.96)),
-          linear-gradient(0deg, rgba(7, 8, 11, 0.96), transparent 16%, transparent 84%, rgba(7, 8, 11, 0.96));
+        background: transparent;
       }
 
       @media (max-width: 680px) {
-        .viewport {
-          right: 14px;
-          bottom: 14px;
-        }
-
         .viewport.is-expanded,
         .viewport.is-expanding {
-          left: 14px;
-          top: 14px;
+          left: 0;
+          top: 0;
           width: auto;
           height: auto;
         }
@@ -487,10 +478,13 @@
 
       #viewport.viewport.is-expanded,
       #viewport.viewport.is-expanding {
-        left: 22px !important;
-        top: 22px !important;
+        left: 0 !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
         width: auto !important;
         height: auto !important;
+        overflow: visible;
       }
 
       @media (max-width: 680px) {
@@ -507,8 +501,10 @@
 
         #viewport.viewport.is-expanded,
         #viewport.viewport.is-expanding {
-          left: 14px !important;
-          top: 14px !important;
+          left: 0 !important;
+          top: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
           width: auto !important;
           height: auto !important;
         }
@@ -525,21 +521,9 @@
 
     <div class="veil fixed inset-0"></div>
 
-    <header class="pointer-events-none fixed left-5 right-5 top-5 z-30 flex items-start justify-between gap-4 md:left-8 md:right-8 md:top-8">
-      <div>
-        <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-400">Reading Field</p>
-        <h1 class="max-w-[14rem] font-serif text-3xl leading-none text-stone-100 md:max-w-none md:text-5xl">
-          Freeform fragments
-        </h1>
-      </div>
-      <div class="hidden max-w-xs text-right text-sm leading-6 text-stone-400 md:block">
-        Swipe, wheel, or drag the surface. Click any fragment to open a reading preview.
-      </div>
-    </header>
-
     <aside
       id="preview"
-      class="preview fixed bottom-5 left-5 right-5 z-40 max-h-[68vh] overflow-auto rounded-lg border border-white/15 bg-[#111318]/95 p-5 shadow-2xl shadow-black/50 backdrop-blur-xl md:bottom-8 md:left-auto md:right-8 md:w-[440px] md:p-6"
+      class="preview fixed bottom-5 left-5 right-5 z-40 max-h-[68vh] overflow-auto rounded-lg border border-white/15 bg-[#111318]/95 p-5 backdrop-blur-xl md:bottom-8 md:left-auto md:right-8 md:w-[440px] md:p-6"
       role="dialog"
       aria-modal="false"
       aria-labelledby="previewTitle"
@@ -647,6 +631,15 @@
       let pointerTravel = 0;
       let suppressNextBlankClick = false;
       let pointerDownOnVisibleElement = false;
+      let isCollapsedWidgetPressing = false;
+      let isCollapsedWidgetDragging = false;
+      let collapsedWidgetX = 0;
+      let collapsedWidgetY = 0;
+      let collapsedWidgetEdge = "right";
+      let collapsedDragOffsetX = 0;
+      let collapsedDragOffsetY = 0;
+      let collapsedPointerId = null;
+      let collapsedWidgetRevealed = false;
       let longPressTimer = 0;
       let pressCardIndex = null;
       let isElementDragging = false;
@@ -694,6 +687,9 @@
       const editorMinFontSize = 8;
       const elementLongPressDelay = 320;
       const photoPickerSettleDelay = 1200;
+      const collapsedEdgeGap = 12;
+      const collapsedDragThreshold = 8;
+      const collapsedSnapDistance = 72;
       const stackLayouts = [
         { x: 88, y: 76, rotation: -7, scale: 0.46, z: 2 },
         { x: 88, y: 76, rotation: 5, scale: 0.42, z: 1 },
@@ -823,6 +819,7 @@
         velocityY = 0;
         targetVelocityX = 0;
         targetVelocityY = 0;
+        collapsedWidgetRevealed = false;
         pickDefaultSticky();
         randomizeStackOrder();
         setWidgetState("collapsed");
@@ -1134,22 +1131,18 @@
         const isChoosing = state === "collapsed" && addInteractionStage === "choosing";
         const collapsedWidth = isChoosing ? (isWide ? 300 : 286) : isWide ? 176 : 156;
         const collapsedHeight = isChoosing ? (isWide ? 180 : 172) : isWide ? 148 : 132;
-        const edge = isWide ? 22 : 14;
 
         if (state === "expanded" || state === "expanding") {
-          viewport.style.setProperty("left", `${edge}px`, "important");
-          viewport.style.setProperty("right", `${edge}px`, "important");
-          viewport.style.setProperty("top", `${edge}px`, "important");
-          viewport.style.setProperty("bottom", `${edge}px`, "important");
+          viewport.style.setProperty("left", "0", "important");
+          viewport.style.setProperty("right", "0", "important");
+          viewport.style.setProperty("top", "0", "important");
+          viewport.style.setProperty("bottom", "0", "important");
           viewport.style.setProperty("width", "auto", "important");
           viewport.style.setProperty("height", "auto", "important");
         } else {
-          viewport.style.setProperty("left", "auto", "important");
-          viewport.style.setProperty("top", "auto", "important");
-          viewport.style.setProperty("right", `${edge}px`, "important");
-          viewport.style.setProperty("bottom", `${edge}px`, "important");
           viewport.style.setProperty("width", `${collapsedWidth}px`, "important");
           viewport.style.setProperty("height", `${collapsedHeight}px`, "important");
+          positionCollapsedWidget(collapsedWidgetRevealed || isChoosing || state === "collapsing");
         }
 
         viewport.classList.toggle("is-collapsed", state === "collapsed");
@@ -1163,10 +1156,68 @@
           applyExpandedTransforms(true);
         }
         if (state === "collapsed") applyStackTransforms();
+        syncElectronHitRegion();
       }
 
       function canPan() {
         return state === "expanded";
+      }
+
+      function getCollapsedSize() {
+        const isWide = window.innerWidth > 680;
+        const isChoosing = state === "collapsed" && addInteractionStage === "choosing";
+        return {
+          width: isChoosing ? (isWide ? 300 : 286) : isWide ? 176 : 156,
+          height: isChoosing ? (isWide ? 180 : 172) : isWide ? 148 : 132,
+        };
+      }
+
+      function clampCollapsedWidget(x, y, width, height, revealed) {
+        return {
+          x: Math.max(collapsedEdgeGap, Math.min(window.innerWidth - width - collapsedEdgeGap, x)),
+          y: Math.max(collapsedEdgeGap, Math.min(window.innerHeight - height - collapsedEdgeGap, y)),
+        };
+      }
+
+      function positionCollapsedWidget(revealed = collapsedWidgetRevealed) {
+        if (state === "expanded" || state === "expanding") return;
+        collapsedWidgetRevealed = revealed;
+        const { width, height } = getCollapsedSize();
+
+        if (!collapsedWidgetX && !collapsedWidgetY) {
+          collapsedWidgetEdge = "right";
+          collapsedWidgetX = window.innerWidth - width - collapsedEdgeGap;
+          collapsedWidgetY = Math.max(collapsedEdgeGap, window.innerHeight - height - collapsedEdgeGap);
+        }
+
+        const nextPosition = clampCollapsedWidget(collapsedWidgetX, collapsedWidgetY, width, height, revealed);
+        collapsedWidgetX = nextPosition.x;
+        collapsedWidgetY = nextPosition.y;
+        viewport.style.setProperty("left", `${collapsedWidgetX}px`, "important");
+        viewport.style.setProperty("top", `${collapsedWidgetY}px`, "important");
+        viewport.style.setProperty("right", "auto", "important");
+        viewport.style.setProperty("bottom", "auto", "important");
+      }
+
+      function snapCollapsedWidgetToNearestEdge() {
+        const { width, height } = getCollapsedSize();
+        const centerX = collapsedWidgetX + width / 2;
+        const centerY = collapsedWidgetY + height / 2;
+        const distances = {
+          left: centerX,
+          right: window.innerWidth - centerX,
+          top: centerY,
+          bottom: window.innerHeight - centerY,
+        };
+        const [nearestEdge, nearestDistance] = Object.entries(distances).sort((a, b) => a[1] - b[1])[0];
+        collapsedWidgetEdge = nearestDistance <= collapsedSnapDistance ? nearestEdge : "free";
+        positionCollapsedWidget(true);
+      }
+
+      function syncElectronHitRegion(forceInteractive = false) {
+        if (!window.chillmemoBridge?.setInteractive) return;
+        const interactive = forceInteractive || state === "expanded" || state === "expanding" || state === "collapsing" || isInsideViewport(currentPointerX, currentPointerY);
+        window.chillmemoBridge.setInteractive(interactive);
       }
 
       function clearCollapseTimer() {
@@ -1321,6 +1372,7 @@
           if (state !== "collapsing") return;
           pickDefaultSticky();
           randomizeStackOrder();
+          collapsedWidgetRevealed = false;
           setWidgetState("collapsed");
           applyStackTransforms();
         }, collapseDuration);
@@ -1402,6 +1454,7 @@
       function trackWidgetPointer(event) {
         currentPointerX = event.clientX;
         currentPointerY = event.clientY;
+        syncElectronHitRegion();
 
         if (state === "collapsed" && addInteractionStage === "choosing") {
           if (isInsideViewport(event.clientX, event.clientY)) {
@@ -1418,10 +1471,26 @@
         }
       }
 
+      function revealCollapsedWidget() {
+        if (state !== "collapsed" || isCollapsedWidgetDragging) return;
+        positionCollapsedWidget(true);
+        syncElectronHitRegion(true);
+      }
+
+      function tuckCollapsedWidget() {
+        if (state !== "collapsed" || isCollapsedWidgetDragging || addInteractionStage === "choosing") return;
+        positionCollapsedWidget(false);
+        syncElectronHitRegion();
+      }
+
       function beginChoosing(event) {
         event.stopPropagation();
         currentPointerX = event.clientX;
         currentPointerY = event.clientY;
+        if (suppressNextBlankClick) {
+          suppressNextBlankClick = false;
+          return;
+        }
         if (state !== "collapsed") return;
         if (isTotalLimitReached()) {
           showLimitToast();
@@ -1674,6 +1743,22 @@
 
       function onPointerDown(event) {
         if (event.target.closest(".editor-layer")) return;
+        if (state === "collapsed" && !event.target.closest(".add-plus")) {
+          isCollapsedWidgetPressing = true;
+          collapsedPointerId = event.pointerId ?? null;
+          collapsedDragOffsetX = event.clientX - viewport.getBoundingClientRect().left;
+          collapsedDragOffsetY = event.clientY - viewport.getBoundingClientRect().top;
+          currentPointerX = event.clientX;
+          currentPointerY = event.clientY;
+          lastPointerX = event.clientX;
+          lastPointerY = event.clientY;
+          lastPointerTime = performance.now();
+          pointerTravel = 0;
+          suppressNextBlankClick = false;
+          collapsedWidgetRevealed = true;
+          syncElectronHitRegion(true);
+          return;
+        }
         if (!canPan()) {
           return;
         }
@@ -1702,7 +1787,9 @@
       }
 
       function onPointerMove(event) {
-        if (!isDragging && pressCardIndex === null && !isElementDragging) return;
+        if (event.__chillmemoMoveHandled) return;
+        event.__chillmemoMoveHandled = true;
+        if (!isDragging && pressCardIndex === null && !isElementDragging && !isCollapsedWidgetPressing && !isCollapsedWidgetDragging) return;
 
         const now = performance.now();
         const deltaX = event.clientX - lastPointerX;
@@ -1710,6 +1797,27 @@
         const elapsed = Math.max(16, now - lastPointerTime);
         pointerTravel += Math.hypot(deltaX, deltaY);
         if (pointerTravel > 6) suppressNextBlankClick = true;
+
+        if (isCollapsedWidgetPressing && !isCollapsedWidgetDragging && pointerTravel > collapsedDragThreshold) {
+          isCollapsedWidgetDragging = true;
+          viewport.classList.add("is-collapsed-widget-dragging");
+          if (event.pointerId !== undefined) viewport.setPointerCapture(event.pointerId);
+        }
+
+        if (isCollapsedWidgetDragging) {
+          const { width, height } = getCollapsedSize();
+          collapsedWidgetX = event.clientX - collapsedDragOffsetX;
+          collapsedWidgetY = event.clientY - collapsedDragOffsetY;
+          const nextPosition = clampCollapsedWidget(collapsedWidgetX, collapsedWidgetY, width, height, true);
+          collapsedWidgetX = nextPosition.x;
+          collapsedWidgetY = nextPosition.y;
+          viewport.style.setProperty("left", `${collapsedWidgetX}px`, "important");
+          viewport.style.setProperty("top", `${collapsedWidgetY}px`, "important");
+          currentPointerX = event.clientX;
+          currentPointerY = event.clientY;
+          syncElectronHitRegion(true);
+          return;
+        }
 
         if (pressCardIndex !== null && !isElementDragging && pointerTravel > 8) {
           clearLongPressTimer();
@@ -1754,6 +1862,23 @@
         const releasedCardIndex = getCardIndexFromEvent(event) ?? pressCardIndex;
         clearLongPressTimer();
         pressCardIndex = null;
+
+        if (isCollapsedWidgetPressing && !isCollapsedWidgetDragging) {
+          isCollapsedWidgetPressing = false;
+          collapsedPointerId = null;
+          return;
+        }
+
+        if (isCollapsedWidgetDragging) {
+          isCollapsedWidgetPressing = false;
+          isCollapsedWidgetDragging = false;
+          viewport.classList.remove("is-collapsed-widget-dragging");
+          snapCollapsedWidgetToNearestEdge();
+          if (event.pointerId !== undefined) viewport.releasePointerCapture(event.pointerId);
+          collapsedPointerId = null;
+          window.setTimeout(() => syncElectronHitRegion(), 0);
+          return;
+        }
 
         if (isElementDragging) {
           if (dragInput === "pointer" && event.pointerId === undefined) return;
@@ -1833,8 +1958,16 @@
       viewport.addEventListener("mousedown", onPointerDown);
       window.addEventListener("pointerdown", handleGlobalPointerDown, true);
       window.addEventListener("click", handleGlobalClick, true);
+      window.addEventListener("pointermove", (event) => {
+        if (isCollapsedWidgetPressing || isCollapsedWidgetDragging) onPointerMove(event);
+      });
       window.addEventListener("mousemove", onPointerMove);
+      window.addEventListener("pointerup", (event) => {
+        if (isCollapsedWidgetPressing || isCollapsedWidgetDragging) onPointerUp(event);
+      });
       window.addEventListener("mouseup", onPointerUp);
+      viewport.addEventListener("mouseenter", revealCollapsedWidget);
+      viewport.addEventListener("mouseleave", tuckCollapsedWidget);
       viewport.addEventListener("mouseleave", scheduleReturnFromWidgetLeave);
       viewport.addEventListener("pointerleave", scheduleReturnFromWidgetLeave);
       window.addEventListener("mousemove", trackWidgetPointer);

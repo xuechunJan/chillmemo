@@ -1,0 +1,35 @@
+{
+  "name": "chillmemo",
+  "version": "1.0.0",
+  "description": "Transparent macOS desktop wrapper for the reading fragment widget prototype.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.xuechun.chillmemo",
+    "productName": "Chillmemo",
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "build/icon.icns",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    }
+  }
+}
