@@ -131,6 +131,17 @@
         box-shadow: none;
       }
 
+      .viewport.is-expanded .card.is-element-dragging {
+        cursor: grabbing;
+        transition:
+          transform 180ms cubic-bezier(0.2, 1.4, 0.24, 1),
+          filter 180ms ease;
+        filter:
+          drop-shadow(0 0 14px rgba(245, 245, 245, 0.66))
+          drop-shadow(0 0 2px rgba(32, 32, 32, 0.78))
+          drop-shadow(0 20px 30px rgba(0, 0, 0, 0.34));
+      }
+
       .viewport.is-collapsed .card {
         transition-duration: 560ms;
       }
@@ -146,10 +157,9 @@
         backdrop-filter: none;
       }
 
-      .viewport.is-collapsed .card:nth-child(n + 6),
-      .viewport.is-collapsing .card:nth-child(n + 6) {
-        opacity: 0;
-        pointer-events: none;
+      .viewport.is-collapsed.is-add-choosing {
+        width: 300px !important;
+        height: 180px !important;
       }
 
       .card.is-hidden-in-stack {
@@ -189,6 +199,11 @@
         display: block;
       }
 
+      .viewport.is-collapsed.is-limit-stack .sticky-shape,
+      .viewport.is-collapsing.is-limit-stack .sticky-shape {
+        display: none;
+      }
+
       .viewport.is-expanding .taped-shape,
       .viewport.is-expanded .taped-shape {
         display: block;
@@ -196,10 +211,126 @@
         transition: filter 180ms ease;
       }
 
+      .viewport.is-collapsed.is-limit-stack .taped-shape,
+      .viewport.is-collapsing.is-limit-stack .taped-shape {
+        display: block;
+        filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.38));
+      }
+
       .viewport.is-expanded .card:hover .taped-shape {
         filter:
-          drop-shadow(0 0 13px rgba(255, 245, 188, 0.76))
+          drop-shadow(0 0 12px rgba(245, 245, 245, 0.58))
+          drop-shadow(0 0 2px rgba(28, 28, 28, 0.72))
           drop-shadow(0 18px 28px rgba(0, 0, 0, 0.34));
+      }
+
+      .add-plus {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 80;
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+        cursor: pointer;
+        font-size: 22px;
+        line-height: 1;
+        opacity: 0;
+        pointer-events: auto;
+        transform: translate(-50%, -50%) scale(0.84);
+        transition:
+          opacity 160ms ease,
+          transform 160ms ease,
+          filter 160ms ease;
+      }
+
+      .viewport.is-collapsed:not(.is-add-choosing):hover .add-plus {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .viewport.is-collapsed.is-add-choosing .add-plus,
+      .viewport.is-expanding .add-plus,
+      .viewport.is-expanded .add-plus,
+      .viewport.is-collapsing .add-plus {
+        pointer-events: none;
+      }
+
+      .add-plus:hover {
+        filter:
+          drop-shadow(0 0 10px rgba(245, 245, 245, 0.66))
+          drop-shadow(0 0 2px rgba(28, 28, 28, 0.72));
+      }
+
+      .photo-input {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .limit-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 34px;
+        z-index: 120;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(18, 18, 22, 0.9);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.38);
+        color: rgba(255, 250, 230, 0.96);
+        font-size: 14px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, 10px) scale(0.98);
+        transition:
+          opacity 180ms ease,
+          transform 180ms ease;
+      }
+
+      .limit-toast.is-visible {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+
+      .editor-layer,
+      .polaroid-photo {
+        position: absolute;
+        display: none;
+        pointer-events: auto;
+      }
+
+      .viewport.is-expanded .card.is-added-sticky .editor-layer {
+        display: block;
+        left: 16%;
+        top: 18%;
+        width: 68%;
+        height: 56%;
+        resize: none;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: rgba(32, 26, 36, 0.86);
+        font: 18px/1.45 Georgia, "Times New Roman", serif;
+        overflow: hidden;
+        padding: 18px;
+      }
+
+      .viewport.is-expanded .card.is-added-polaroid .polaroid-photo {
+        display: block;
+        left: 3.8%;
+        top: 2.9%;
+        width: 92.4%;
+        height: 79.9%;
+        object-fit: contain;
       }
 
       .card-visual {
@@ -349,6 +480,11 @@
         height: 148px !important;
       }
 
+      #viewport.viewport.is-collapsed.is-add-choosing {
+        width: 300px !important;
+        height: 180px !important;
+      }
+
       #viewport.viewport.is-expanded,
       #viewport.viewport.is-expanding {
         left: 22px !important;
@@ -364,6 +500,11 @@
           height: 132px !important;
         }
 
+        #viewport.viewport.is-collapsed.is-add-choosing {
+          width: 286px !important;
+          height: 172px !important;
+        }
+
         #viewport.viewport.is-expanded,
         #viewport.viewport.is-expanding {
           left: 14px !important;
@@ -377,7 +518,10 @@
   <body>
     <main id="viewport" class="viewport" aria-label="Freeform swipeable reading canvas">
       <section id="canvas" class="canvas" aria-live="polite"></section>
+      <button id="addPlus" class="add-plus" type="button" aria-label="Add interaction">➕</button>
+      <input id="photoInput" class="photo-input" type="file" accept="image/png,image/jpeg" tabindex="-1" />
     </main>
+    <div id="limitToast" class="limit-toast" role="status" aria-live="polite">数量已达上限</div>
 
     <div class="veil fixed inset-0"></div>
 
@@ -451,14 +595,26 @@
         ["Southern note", "The bottom edge should not feel like the bottom of a document.", "Boundary", 1980, 1910, 360, 220, 2, 0.98, "#2b2118", "#6f4e37", "#e0c097"],
         ["Far marker", "A distant fragment at the margin gives the surface a scale the viewport cannot show all at once.", "Scale", 3000, 1960, 330, 250, -3, 1, "#273043", "#9197ae", "#eff6ee"],
       ];
-      const cards = allCards.slice(0, 6).map((card, index) => {
+      const selectedCards = [
+        ...allCards.slice(0, 7),
+        ["Polaroid", "", "Photo", 0, 0, 240, 330, 2, 1, "#f7f2e7", "#ead8bd", "#ffffff"],
+        ["Polaroid", "", "Photo", 0, 0, 240, 330, -2, 1, "#f7f2e7", "#ead8bd", "#ffffff"],
+        ["Polaroid", "", "Photo", 0, 0, 240, 330, 1, 1, "#f7f2e7", "#ead8bd", "#ffffff"],
+        ["Polaroid", "", "Photo", 0, 0, 240, 330, -1, 1, "#f7f2e7", "#ead8bd", "#ffffff"],
+      ];
+      const cards = selectedCards.map((card, index) => {
         const expandedPositions = [
           [1210, 600, 270, 300, -5, 1.02],
           [1430, 560, 306, 306, 4, 1.12],
           [1600, 650, 300, 280, -2, 1.01],
           [1310, 820, 270, 320, 5, 0.99],
           [1530, 840, 300, 300, -4, 1.03],
-          [1740, 790, 280, 310, 3, 1],
+          [1740, 790, 240, 330, 3, 1],
+          [1900, 920, 270, 300, -3, 1],
+          [1210, 920, 280, 310, 2, 1],
+          [1700, 530, 280, 310, -2, 1],
+          [1620, 980, 280, 310, 1, 1],
+          [1900, 650, 280, 310, -1, 1],
         ];
         const [x, y, width, height, rotation, scale] = expandedPositions[index];
         return [card[0], card[1], card[2], x, y, width, height, rotation, scale, card[9], card[10], card[11]];
@@ -466,6 +622,9 @@
 
       const viewport = document.getElementById("viewport");
       const canvas = document.getElementById("canvas");
+      const addPlus = document.getElementById("addPlus");
+      const photoInput = document.getElementById("photoInput");
+      const limitToast = document.getElementById("limitToast");
       const preview = document.getElementById("preview");
       const closePreview = document.getElementById("closePreview");
       const previewKicker = document.getElementById("previewKicker");
@@ -483,30 +642,61 @@
       let lastPointerX = 0;
       let lastPointerY = 0;
       let lastPointerTime = 0;
+      let currentPointerX = null;
+      let currentPointerY = null;
+      let pointerTravel = 0;
+      let suppressNextBlankClick = false;
+      let pointerDownOnVisibleElement = false;
+      let longPressTimer = 0;
+      let pressCardIndex = null;
+      let isElementDragging = false;
+      let elementDragIndex = null;
+      let photoTargetIndex = null;
+      let isPhotoPickerOpen = false;
+      let preventCollapseUntil = 0;
       let selectedCard = null;
       let state = "collapsed";
       let collapseTimer = 0;
       let expandTimer = 0;
       let collapseAfterWheelTimer = 0;
+      let toastTimer = 0;
       let lastWheelTime = 0;
       let expandedSyncUntil = 0;
       let lastExpandedLayoutSignature = "";
+      let lastStackOrderSignature = "";
+      let stackZOrder = [];
+      let addInteractionStage = "single";
+      let activeStickyIndex = 0;
+      let activeStickyAssetIndex = 0;
+      let activeCardIndex = 0;
+      let activeKind = "sticky";
+      let chosenPhotoUrl = "";
+      let photoUrls = new Map();
+      let addedCardIndexes = [];
+      let activeStickySlots = [];
+      let activePolaroidSlots = [];
+      let usedStickyAssetIndexes = [];
 
       const friction = 0.92;
       const damping = 0.22;
       const wheelForce = 0.055;
       const dragVelocityBoost = 0.9;
-      const stackCardCount = 5;
-      const collapseDelay = 800;
+      const maxStickyCount = 6;
+      const maxPolaroidCount = 4;
+      const stackCardCount = maxStickyCount + maxPolaroidCount;
+      const collapseDelay = 5000;
       const wheelSettleDelay = 700;
       const expandDuration = 640;
       const collapseDuration = 580;
+      const collapsedStickySlot = 0;
+      const polaroidAssetIndex = 7;
+      const editorMaxFontSize = 18;
+      const editorMinFontSize = 8;
+      const elementLongPressDelay = 320;
+      const photoPickerSettleDelay = 1200;
       const stackLayouts = [
-        { x: 86, y: 74, rotation: -8, scale: 0.46, z: 5 },
-        { x: 98, y: 82, rotation: 5, scale: 0.43, z: 4 },
-        { x: 78, y: 88, rotation: -2, scale: 0.4, z: 3 },
-        { x: 106, y: 66, rotation: 11, scale: 0.36, z: 2 },
-        { x: 68, y: 70, rotation: -14, scale: 0.34, z: 1 },
+        { x: 88, y: 76, rotation: -7, scale: 0.46, z: 2 },
+        { x: 88, y: 76, rotation: 5, scale: 0.42, z: 1 },
       ];
       const stickyAssets = [
         "assets/stickies/sticky-11.svg",
@@ -515,6 +705,11 @@
         "assets/stickies/sticky-18.svg",
         "assets/stickies/sticky-19.svg",
         "assets/stickies/sticky-20.svg",
+        "assets/stickies/sticky-11.svg",
+        "assets/polaroid.svg",
+        "assets/polaroid.svg",
+        "assets/polaroid.svg",
+        "assets/polaroid.svg",
       ];
       const tapedAssets = [
         "assets/taped-stickies/taped-2.svg",
@@ -523,6 +718,11 @@
         "assets/taped-stickies/taped-5.svg",
         "assets/taped-stickies/taped-8.svg",
         "assets/taped-stickies/taped-9.svg",
+        "assets/taped-stickies/taped-2.svg",
+        "assets/polaroid.svg",
+        "assets/polaroid.svg",
+        "assets/polaroid.svg",
+        "assets/polaroid.svg",
       ];
       const expandedClusters = [
         [1010, 520],
@@ -531,6 +731,24 @@
         [1055, 930],
         [1470, 900],
         [1875, 935],
+        [2240, 700],
+        [1200, 700],
+        [1680, 650],
+        [1600, 1020],
+        [1900, 660],
+      ];
+      const expandedSizes = [
+        [270, 300],
+        [306, 306],
+        [300, 280],
+        [270, 320],
+        [300, 300],
+        [240, 330],
+        [270, 300],
+        [280, 310],
+        [280, 310],
+        [280, 310],
+        [280, 310],
       ];
 
       function randomBetween(min, max) {
@@ -544,6 +762,120 @@
           [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
         }
         return result;
+      }
+
+      function randomizeStackOrder() {
+        let order = shuffledCopy(Array.from({ length: stackCardCount }, (_, index) => index + 1));
+        let signature = order.join("|");
+
+        for (let attempt = 0; signature === lastStackOrderSignature && attempt < 8; attempt += 1) {
+          order = shuffledCopy(order);
+          signature = order.join("|");
+        }
+
+        stackZOrder = order;
+        lastStackOrderSignature = signature;
+      }
+
+      function isStickyLimitReached() {
+        return activeStickySlots.length >= maxStickyCount;
+      }
+
+      function isPolaroidLimitReached() {
+        return activePolaroidSlots.length >= maxPolaroidCount;
+      }
+
+      function isTotalLimitReached() {
+        return isStickyLimitReached() && isPolaroidLimitReached();
+      }
+
+      function shouldShowCollapsedStack() {
+        return addedCardIndexes.length > 2;
+      }
+
+      function showLimitToast() {
+        window.clearTimeout(toastTimer);
+        limitToast.classList.add("is-visible");
+        toastTimer = window.setTimeout(() => {
+          limitToast.classList.remove("is-visible");
+        }, 1600);
+      }
+
+      function getNextStickyAssetIndex(preferredIndex = activeStickyAssetIndex) {
+        if (!usedStickyAssetIndexes.includes(preferredIndex)) return preferredIndex;
+        return Array.from({ length: maxStickyCount }, (_, index) => index).find((index) => !usedStickyAssetIndexes.includes(index));
+      }
+
+      function pickDefaultSticky() {
+        const availableStickyAssets = Array.from({ length: maxStickyCount }, (_, index) => index).filter((index) => !usedStickyAssetIndexes.includes(index));
+        const sourceAssets = availableStickyAssets.length ? availableStickyAssets : Array.from({ length: maxStickyCount }, (_, index) => index);
+        activeStickyAssetIndex = sourceAssets[Math.floor(Math.random() * sourceAssets.length)];
+        activeStickyIndex = collapsedStickySlot;
+        activeCardIndex = activeStickyIndex;
+        activeKind = "sticky";
+        addInteractionStage = "single";
+        updateCardAssets(activeStickyIndex, activeStickyAssetIndex);
+      }
+
+      function resetToInitialCollapsed() {
+        hidePreview();
+        velocityX = 0;
+        velocityY = 0;
+        targetVelocityX = 0;
+        targetVelocityY = 0;
+        pickDefaultSticky();
+        randomizeStackOrder();
+        setWidgetState("collapsed");
+        applyStackTransforms();
+      }
+
+      function getVisibleCollapsedIndexes() {
+        if (addInteractionStage === "choosing") return [activeStickyIndex, polaroidAssetIndex];
+        if ((state === "collapsed" || state === "collapsing") && shouldShowCollapsedStack()) return [...addedCardIndexes];
+        return [activeStickyIndex];
+      }
+
+      function syncAddInteractionClasses() {
+        viewport.classList.toggle("is-add-choosing", state === "collapsed" && addInteractionStage === "choosing");
+        viewport.classList.toggle("is-limit-stack", (state === "collapsed" || state === "collapsing") && shouldShowCollapsedStack());
+        [...canvas.children].forEach((card, index) => {
+          card.classList.toggle("is-active-sticky", state === "expanded" && activeKind === "sticky" && index === activeCardIndex);
+          card.classList.toggle("is-active-polaroid", state === "expanded" && activeKind === "polaroid" && index === activeCardIndex);
+          card.classList.toggle("is-added-sticky", state === "expanded" && activeStickySlots.includes(index));
+          card.classList.toggle("is-added-polaroid", state === "expanded" && activePolaroidSlots.includes(index));
+        });
+      }
+
+      function updateCardAssets(index, stickyAssetIndex) {
+        const card = canvas.children[index];
+        if (!card) return;
+        card.querySelector(".sticky-shape").src = stickyAssets[stickyAssetIndex];
+        card.querySelector(".taped-shape").src = tapedAssets[stickyAssetIndex];
+      }
+
+      function addExpandedCard(kind, stickyAssetIndex = activeStickyAssetIndex) {
+        let slotIndex = -1;
+
+        if (kind === "sticky") {
+          slotIndex = Array.from({ length: maxStickyCount }, (_, index) => index + 1).find((index) => !activeStickySlots.includes(index));
+          if (slotIndex === undefined) return false;
+          const nextStickyAssetIndex = getNextStickyAssetIndex(stickyAssetIndex);
+          if (nextStickyAssetIndex === undefined) return false;
+          if (!activeStickySlots.includes(slotIndex)) activeStickySlots.push(slotIndex);
+          usedStickyAssetIndexes.push(nextStickyAssetIndex);
+          updateCardAssets(slotIndex, nextStickyAssetIndex);
+        } else {
+          slotIndex = Array.from({ length: maxPolaroidCount }, (_, index) => index + 7).find((index) => !activePolaroidSlots.includes(index));
+          if (slotIndex === undefined) return false;
+          if (!activePolaroidSlots.includes(slotIndex)) activePolaroidSlots.push(slotIndex);
+          updateCardAssets(slotIndex, polaroidAssetIndex);
+        }
+
+        addedCardIndexes = addedCardIndexes.filter((index) => index !== slotIndex);
+        addedCardIndexes.push(slotIndex);
+        activeCardIndex = slotIndex;
+        activeKind = kind;
+        return true;
       }
 
       function distanceBetween(a, b) {
@@ -566,10 +898,9 @@
 
         cards.forEach((card, index) => {
           const [baseX, baseY] = slots[index];
-          const width = index === 1 ? 306 : [270, 300, 270, 300, 280][Math.max(0, index - 1)] || 280;
-          const height = index === 1 ? 306 : [300, 280, 320, 300, 310][Math.max(0, index - 1)] || 300;
+          const [width, height] = expandedSizes[index];
           const rotation = randomBetween(-8, 8);
-          const scale = index === 1 ? randomBetween(1.12, 1.18) : randomBetween(0.96, 1.06);
+          const scale = index === 1 ? randomBetween(1.12, 1.18) : index === 5 ? randomBetween(1, 1.08) : randomBetween(0.96, 1.06);
           let x = baseX + randomBetween(-34, 34);
           let y = baseY + randomBetween(-30, 30);
 
@@ -602,12 +933,68 @@
         return layout;
       }
 
+      function buildAddedExpandedLayout() {
+        const visibleIndexes = addedCardIndexes.length ? addedCardIndexes : [activeCardIndex];
+        const previousIndexes = visibleIndexes.filter((index) => index !== activeCardIndex);
+        const nearbySlots = shuffledCopy([
+          [-360, -120],
+          [330, -105],
+          [-300, 210],
+          [360, 185],
+          [-50, -290],
+          [90, 300],
+          [-520, 60],
+          [520, 30],
+          [210, -300],
+        ]);
+
+        return cards.map((card, index) => {
+          const isVisible = visibleIndexes.includes(index);
+          const isActive = index === activeCardIndex;
+          const isPolaroid = index >= 7;
+          const [width, height] = isPolaroid ? [260, 360] : expandedSizes[index];
+
+          if (!isVisible) {
+            return {
+              x: 1400,
+              y: 700,
+              width: card[5],
+              height: card[6],
+              rotation: 0,
+              scale: 0.2,
+            };
+          }
+
+          if (!isActive) {
+            const slotIndex = Math.max(0, previousIndexes.indexOf(index));
+            const [offsetX, offsetY] = nearbySlots[slotIndex % nearbySlots.length];
+            return {
+              x: Math.round(1400 + offsetX + randomBetween(-42, 42)),
+              y: Math.round(680 + offsetY + randomBetween(-36, 36)),
+              width,
+              height,
+              rotation: Number(randomBetween(-6, 6).toFixed(2)),
+              scale: Number(randomBetween(0.92, 1.04).toFixed(2)),
+            };
+          }
+
+          return {
+            x: Math.round(1400 + randomBetween(-120, 120)),
+            y: Math.round(680 + randomBetween(-90, 90)),
+            width,
+            height,
+            rotation: Number(randomBetween(-5, 5).toFixed(2)),
+            scale: activeKind === "sticky" && index === 1 ? Number(randomBetween(1.12, 1.18).toFixed(2)) : Number(randomBetween(1.02, 1.1).toFixed(2)),
+          };
+        });
+      }
+
       function randomizeExpandedLayout() {
-        let layout = buildRandomExpandedLayout();
+        let layout = buildAddedExpandedLayout();
         let signature = layout.map((item) => `${item.x},${item.y}`).join("|");
 
         for (let attempt = 0; signature === lastExpandedLayoutSignature && attempt < 8; attempt += 1) {
-          layout = buildRandomExpandedLayout();
+          layout = buildAddedExpandedLayout();
           signature = layout.map((item) => `${item.x},${item.y}`).join("|");
         }
 
@@ -634,6 +1021,60 @@
         });
       }
 
+      function editorOverflows(editor) {
+        return editor.scrollHeight > editor.clientHeight + 1 || editor.scrollWidth > editor.clientWidth + 1;
+      }
+
+      function fitEditorText(editor) {
+        let fontSize = editorMaxFontSize;
+        editor.style.fontSize = `${fontSize}px`;
+
+        while (fontSize > editorMinFontSize && editorOverflows(editor)) {
+          fontSize -= 1;
+          editor.style.fontSize = `${fontSize}px`;
+        }
+
+        return !editorOverflows(editor);
+      }
+
+      function storeEditorState(editor) {
+        editor.dataset.lastValidValue = editor.value;
+        editor.dataset.lastValidSelectionStart = String(editor.selectionStart ?? editor.value.length);
+        editor.dataset.lastValidSelectionEnd = String(editor.selectionEnd ?? editor.value.length);
+      }
+
+      function restoreEditorState(editor) {
+        editor.value = editor.dataset.lastValidValue ?? "";
+        fitEditorText(editor);
+        const selectionStart = Number(editor.dataset.lastValidSelectionStart ?? editor.value.length);
+        const selectionEnd = Number(editor.dataset.lastValidSelectionEnd ?? selectionStart);
+        editor.setSelectionRange(Math.min(selectionStart, editor.value.length), Math.min(selectionEnd, editor.value.length));
+      }
+
+      function setupEditor(editor) {
+        storeEditorState(editor);
+        fitEditorText(editor);
+
+        editor.addEventListener("keydown", (event) => {
+          event.stopPropagation();
+        });
+        editor.addEventListener("wheel", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }, { passive: false });
+        editor.addEventListener("beforeinput", () => {
+          storeEditorState(editor);
+        });
+        editor.addEventListener("input", (event) => {
+          const fits = fitEditorText(editor);
+          if (!fits && !event.inputType?.startsWith("delete")) {
+            restoreEditorState(editor);
+            return;
+          }
+          storeEditorState(editor);
+        });
+      }
+
       function createCard(card, index) {
         const [title, text, kicker, x, y, width, height, rotation, scale, colorA, colorB, colorC] = card;
         const article = document.createElement("article");
@@ -653,6 +1094,8 @@
         article.innerHTML = `
           <img class="sticky-shape" src="${stickyAssets[index % stickyAssets.length]}" alt="" aria-hidden="true" />
           <img class="taped-shape" src="${tapedAssets[index % tapedAssets.length]}" alt="" aria-hidden="true" />
+          <img class="polaroid-photo" alt="" />
+          <textarea class="editor-layer" aria-label="Memo text"></textarea>
           <div class="card-visual"></div>
           <div class="card-body">
             <p class="card-kicker">${kicker}</p>
@@ -660,9 +1103,11 @@
             <p class="card-text">${text}</p>
           </div>
         `;
-        article.addEventListener("click", () => openPreview(index));
+        setupEditor(article.querySelector(".editor-layer"));
+        article.addEventListener("click", (event) => handleCardClick(index, event));
         article.addEventListener("mouseenter", () => {
           if (state !== "expanded") return;
+          if (addedCardIndexes.includes(index)) clearCollapseTimer();
           const rotation = cards[index][7];
           const scale = cards[index][8] + 0.035;
           article.style.transform = `translate3d(0px, 0px, 0) rotate(${rotation}deg) scale(${scale})`;
@@ -670,9 +1115,11 @@
         });
         article.addEventListener("mouseleave", () => {
           if (state !== "expanded") return;
+          if (isElementDragging && elementDragIndex === index) return;
           applyExpandedCardTransform(article, index);
         });
         article.addEventListener("keydown", (event) => {
+          if (event.target.closest(".editor-layer")) return;
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             openPreview(index);
@@ -684,8 +1131,9 @@
       function setWidgetState(nextState) {
         state = nextState;
         const isWide = window.innerWidth > 680;
-        const collapsedWidth = isWide ? 176 : 156;
-        const collapsedHeight = isWide ? 148 : 132;
+        const isChoosing = state === "collapsed" && addInteractionStage === "choosing";
+        const collapsedWidth = isChoosing ? (isWide ? 300 : 286) : isWide ? 176 : 156;
+        const collapsedHeight = isChoosing ? (isWide ? 180 : 172) : isWide ? 148 : 132;
         const edge = isWide ? 22 : 14;
 
         if (state === "expanded" || state === "expanding") {
@@ -708,6 +1156,7 @@
         viewport.classList.toggle("is-expanding", state === "expanding");
         viewport.classList.toggle("is-expanded", state === "expanded");
         viewport.classList.toggle("is-collapsing", state === "collapsing");
+        syncAddInteractionClasses();
 
         if (state === "expanded") {
           expandedSyncUntil = performance.now() + 900;
@@ -739,15 +1188,29 @@
         const viewportHeight = viewport.clientHeight;
         const centerX = viewportWidth / 2 + positionX;
         const centerY = viewportHeight / 2 + positionY;
+        const visibleIndexes = getVisibleCollapsedIndexes();
 
         [...canvas.children].forEach((card, index) => {
           const base = getCardBaseRect(card);
           const currentCenterX = centerX + base.x + base.width / 2;
           const currentCenterY = centerY + base.y + base.height / 2;
-          const stack = stackLayouts[index] || stackLayouts[stackLayouts.length - 1];
-          const desiredX = Math.min(viewportWidth - 64, stack.x);
-          const desiredY = Math.min(viewportHeight - 56, stack.y);
-          const isStackCard = index < stackCardCount;
+          const visibleSlot = visibleIndexes.indexOf(index);
+          const stack =
+            addInteractionStage === "choosing"
+              ? [
+                  { x: 70, y: 92, rotation: -5, scale: 0.34, z: 2 },
+                  { x: 176, y: 88, rotation: 5, scale: 0.32, z: 3 },
+                ][visibleSlot] || stackLayouts[0]
+              : {
+                  x: 88 + ((visibleSlot % 5) - 2) * 7,
+                  y: 76 + (Math.floor(visibleSlot / 5) - 0.5) * 8 + (visibleSlot % 2) * 3,
+                  rotation: [-12, 8, -4, 13, 2, -8, 6, -15, 10, -1][visibleSlot % 10],
+                  scale: activePolaroidSlots.includes(index) ? 0.25 : 0.31,
+                  z: visibleSlot + 1,
+                };
+          const desiredX = addInteractionStage === "choosing" ? stack.x : Math.min(viewportWidth - 64, stack.x);
+          const desiredY = addInteractionStage === "choosing" ? stack.y : Math.min(viewportHeight - 56, stack.y);
+          const isStackCard = visibleSlot !== -1;
 
           card.style.setProperty("--stack-x", `${desiredX - currentCenterX}px`);
           card.style.setProperty("--stack-y", `${desiredY - currentCenterY}px`);
@@ -757,7 +1220,7 @@
           card.style.setProperty("--card-pointer-events", isStackCard ? "auto" : "none");
           card.style.opacity = isStackCard ? "1" : "0";
           card.style.transform = `translate3d(${desiredX - currentCenterX}px, ${desiredY - currentCenterY}px, 0) rotate(${stack.rotation}deg) scale(${isStackCard ? stack.scale : 0.12})`;
-          card.style.zIndex = isStackCard ? stack.z : 0;
+          card.style.zIndex = isStackCard ? stackZOrder[visibleSlot] ?? stack.z : 0;
           card.tabIndex = isStackCard ? 0 : -1;
           card.classList.toggle("is-hidden-in-stack", state === "collapsed" && !isStackCard);
         });
@@ -770,6 +1233,13 @@
         card.style.zIndex = cards.length - index;
       }
 
+      function positionCard(index) {
+        const card = canvas.children[index];
+        if (!card) return;
+        card.style.left = `${cards[index][3]}px`;
+        card.style.top = `${cards[index][4]}px`;
+      }
+
       function applyExpandedTransforms(commit = false) {
         if (commit) {
           [...canvas.children].forEach((card) => {
@@ -777,20 +1247,25 @@
           });
         }
 
+        const visibleIndexes = addedCardIndexes.length ? addedCardIndexes : [activeCardIndex];
+
         [...canvas.children].forEach((card, index) => {
+          const isVisible = visibleIndexes.includes(index);
           const rotation = cards[index][7];
           const scale = cards[index][8];
           card.style.setProperty("--stack-x", "0px");
           card.style.setProperty("--stack-y", "0px");
           card.style.setProperty("--active-r", `${rotation}deg`);
           card.style.setProperty("--active-s", scale);
-          card.style.setProperty("--card-opacity", 1);
-          card.style.setProperty("--card-pointer-events", "auto");
-          card.style.opacity = "1";
+          card.style.setProperty("--card-opacity", isVisible ? 1 : 0);
+          card.style.setProperty("--card-pointer-events", isVisible ? "auto" : "none");
+          card.style.opacity = isVisible ? "1" : "0";
           applyExpandedCardTransform(card, index);
-          card.tabIndex = 0;
-          card.classList.remove("is-hidden-in-stack");
+          card.style.zIndex = index === activeCardIndex ? 90 : 20 + visibleIndexes.indexOf(index);
+          card.tabIndex = isVisible ? 0 : -1;
+          card.classList.toggle("is-hidden-in-stack", !isVisible);
         });
+        syncAddInteractionClasses();
 
         if (commit) {
           void canvas.offsetWidth;
@@ -821,6 +1296,7 @@
       }
 
       function collapseWidget() {
+        if (isPhotoPickerOpen || performance.now() < preventCollapseUntil) return;
         if (state === "collapsed" || state === "collapsing") return;
         if (isDragging) {
           scheduleCollapse();
@@ -838,10 +1314,13 @@
         velocityY = 0;
         targetVelocityX = 0;
         targetVelocityY = 0;
+        randomizeStackOrder();
         setWidgetState("collapsing");
         applyStackTransforms();
         window.setTimeout(() => {
           if (state !== "collapsing") return;
+          pickDefaultSticky();
+          randomizeStackOrder();
           setWidgetState("collapsed");
           applyStackTransforms();
         }, collapseDuration);
@@ -852,21 +1331,224 @@
         collapseTimer = window.setTimeout(collapseWidget, collapseDelay);
       }
 
+      function scheduleInitialReset() {
+        clearCollapseTimer();
+        collapseTimer = window.setTimeout(() => {
+          if (state === "collapsed" && addInteractionStage === "choosing") resetToInitialCollapsed();
+        }, collapseDelay);
+      }
+
+      function scheduleReturnFromWidgetLeave() {
+        if (state === "collapsed" && addInteractionStage === "choosing") {
+          scheduleInitialReset();
+        }
+      }
+
       function isInsideViewport(clientX, clientY) {
         const rect = viewport.getBoundingClientRect();
         return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
       }
 
+      function isInsideActiveCard(clientX, clientY) {
+        const activeCard = canvas.children[activeCardIndex];
+        if (!activeCard) return false;
+        const rect = activeCard.getBoundingClientRect();
+        return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+      }
+
+      function isInsideAddedCard(clientX, clientY) {
+        return addedCardIndexes.some((index) => {
+          const card = canvas.children[index];
+          if (!card || getComputedStyle(card).opacity === "0") return false;
+          const rect = card.getBoundingClientRect();
+          return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+        });
+      }
+
+      function isPointInRect(clientX, clientY, rect) {
+        return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+      }
+
+      function insetRect(rect, insetRatio) {
+        const insetX = rect.width * insetRatio;
+        const insetY = rect.height * insetRatio;
+        return {
+          left: rect.left + insetX,
+          right: rect.right - insetX,
+          top: rect.top + insetY,
+          bottom: rect.bottom - insetY,
+        };
+      }
+
+      function isPointOnVisibleElement(clientX, clientY) {
+        return addedCardIndexes.some((index) => {
+          const card = canvas.children[index];
+          if (!card || getComputedStyle(card).opacity === "0") return false;
+
+          const cardRect = card.getBoundingClientRect();
+          const elementRect = insetRect(cardRect, activePolaroidSlots.includes(index) ? 0.02 : 0.08);
+          if (!isPointInRect(clientX, clientY, elementRect)) return false;
+
+          const editor = card.querySelector(".editor-layer");
+          if (editor && getComputedStyle(editor).display !== "none" && isPointInRect(clientX, clientY, editor.getBoundingClientRect())) return true;
+
+          const photo = card.querySelector(".polaroid-photo");
+          if (photo && getComputedStyle(photo).display !== "none" && isPointInRect(clientX, clientY, photo.getBoundingClientRect())) return true;
+
+          return true;
+        });
+      }
+
       function trackWidgetPointer(event) {
-        if (isInsideViewport(event.clientX, event.clientY)) {
-          clearCollapseTimer();
-          if (state === "collapsed") expandWidget();
+        currentPointerX = event.clientX;
+        currentPointerY = event.clientY;
+
+        if (state === "collapsed" && addInteractionStage === "choosing") {
+          if (isInsideViewport(event.clientX, event.clientY)) {
+            clearCollapseTimer();
+            return;
+          }
+          scheduleInitialReset();
           return;
         }
 
         if (state === "expanded" || state === "expanding") {
-          scheduleCollapse();
+          clearCollapseTimer();
+          return;
         }
+      }
+
+      function beginChoosing(event) {
+        event.stopPropagation();
+        currentPointerX = event.clientX;
+        currentPointerY = event.clientY;
+        if (state !== "collapsed") return;
+        if (isTotalLimitReached()) {
+          showLimitToast();
+          return;
+        }
+        addInteractionStage = "choosing";
+        randomizeStackOrder();
+        clearCollapseTimer();
+        setWidgetState("collapsed");
+        applyStackTransforms();
+        window.setTimeout(() => {
+          if (state === "collapsed" && addInteractionStage === "choosing") applyStackTransforms();
+        }, 220);
+      }
+
+      function expandCollapsedStackFrom(index) {
+        if (!shouldShowCollapsedStack() || !addedCardIndexes.includes(index)) return false;
+        activeCardIndex = index;
+        activeKind = activePolaroidSlots.includes(index) ? "polaroid" : "sticky";
+        addInteractionStage = "selected";
+        clearCollapseTimer();
+        expandWidget();
+        return true;
+      }
+
+      function expandExistingFromLimit(kind) {
+        const slots = kind === "polaroid" ? activePolaroidSlots : activeStickySlots;
+        const fallbackSlots = addedCardIndexes.length ? addedCardIndexes : [...activeStickySlots, ...activePolaroidSlots];
+        const targetIndex = slots[slots.length - 1] ?? fallbackSlots[fallbackSlots.length - 1];
+        if (targetIndex === undefined) return;
+
+        activeCardIndex = targetIndex;
+        activeKind = activePolaroidSlots.includes(targetIndex) ? "polaroid" : "sticky";
+        addInteractionStage = "selected";
+        clearCollapseTimer();
+        expandWidget();
+      }
+
+      function handleCardClick(index, event) {
+        currentPointerX = event.clientX;
+        currentPointerY = event.clientY;
+        const clickedCard = canvas.children[index];
+        const clickedTapedSrc = clickedCard?.querySelector(".taped-shape")?.getAttribute("src") ?? "";
+        const clickedStickySrc = clickedCard?.querySelector(".sticky-shape")?.getAttribute("src") ?? "";
+        const isClickedPolaroid = clickedTapedSrc.includes("polaroid.svg") || clickedStickySrc.includes("polaroid.svg");
+        const clickedVisibleElement = isPointOnVisibleElement(event.clientX, event.clientY);
+
+        if (suppressNextBlankClick) {
+          suppressNextBlankClick = false;
+          event.stopPropagation();
+          return;
+        }
+
+        if (event.target.closest(".editor-layer")) {
+          event.stopPropagation();
+          return;
+        }
+
+        if (state === "expanded" && !clickedVisibleElement) return;
+
+        if (state === "collapsed" && addInteractionStage !== "choosing" && expandCollapsedStackFrom(index)) {
+          event.stopPropagation();
+          return;
+        }
+
+        if (state === "collapsed" && addInteractionStage === "choosing") {
+          event.stopPropagation();
+          if (index !== activeStickyIndex && index !== polaroidAssetIndex) return;
+          activeKind = index === polaroidAssetIndex ? "polaroid" : "sticky";
+          if (!addExpandedCard(activeKind, activeStickyAssetIndex)) {
+            showLimitToast();
+            expandExistingFromLimit(activeKind);
+            return;
+          }
+          addInteractionStage = "selected";
+          clearCollapseTimer();
+          expandWidget();
+          if (activeKind === "polaroid") {
+            requestPhotoForIndex(activeCardIndex);
+          }
+          return;
+        }
+
+        if (state === "expanded" && (activePolaroidSlots.includes(index) || isClickedPolaroid)) {
+          event.stopPropagation();
+          clearCollapseTimer();
+          activeCardIndex = index;
+          activeKind = "polaroid";
+          requestPhotoForIndex(index);
+          return;
+        }
+
+        if (state === "expanded" && activeStickySlots.includes(index)) {
+          event.stopPropagation();
+          clearCollapseTimer();
+          activeCardIndex = index;
+          activeKind = "sticky";
+          const editor = canvas.children[index]?.querySelector(".editor-layer");
+          if (editor) {
+            editor.focus();
+            const end = editor.value.length;
+            editor.setSelectionRange(end, end);
+          }
+          return;
+        }
+      }
+
+      function handleViewportClick(event) {
+        if (suppressNextBlankClick) {
+          suppressNextBlankClick = false;
+          return;
+        }
+
+        if (state !== "expanded") return;
+        if (isPhotoPickerOpen || performance.now() < preventCollapseUntil) return;
+        if (event.target.closest(".add-plus")) return;
+        if (pointerDownOnVisibleElement || isPointOnVisibleElement(event.clientX, event.clientY)) return;
+        collapseWidget();
+      }
+
+      function handleGlobalPointerDown(event) {
+        pointerDownOnVisibleElement = state === "expanded" && isPointOnVisibleElement(event.clientX, event.clientY);
+      }
+
+      function handleGlobalClick(event) {
+        handleViewportClick(event);
+        pointerDownOnVisibleElement = false;
       }
 
       function openPreview(index) {
@@ -885,10 +1567,103 @@
         selectedCard = null;
       }
 
+      function applyPhotoFile(targetIndex, file) {
+        if (!file || !/^image\/(png|jpeg)$/.test(file.type)) return;
+        const photoUrl = URL.createObjectURL(file);
+        const previousUrl = photoUrls.get(targetIndex);
+        if (previousUrl) URL.revokeObjectURL(previousUrl);
+        photoUrls.set(targetIndex, photoUrl);
+        chosenPhotoUrl = photoUrl;
+        const targetCard = canvas.children[targetIndex];
+        const photo = targetCard?.querySelector(".polaroid-photo");
+        if (photo) photo.src = photoUrl;
+      }
+
+      async function requestPhotoForIndex(targetIndex) {
+        photoTargetIndex = targetIndex;
+        isPhotoPickerOpen = true;
+        preventCollapseUntil = performance.now() + 60 * 1000;
+        suppressNextBlankClick = true;
+        clearCollapseTimer();
+
+        if (window.showOpenFilePicker) {
+          try {
+            const [handle] = await window.showOpenFilePicker({
+              multiple: false,
+              types: [
+                {
+                  description: "PNG or JPEG image",
+                  accept: {
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                  },
+                },
+              ],
+            });
+            if (!handle) return;
+            applyPhotoFile(targetIndex, await handle.getFile());
+            return;
+          } catch (error) {
+            if (error?.name === "AbortError") return;
+          } finally {
+            isPhotoPickerOpen = false;
+            preventCollapseUntil = performance.now() + photoPickerSettleDelay;
+            suppressNextBlankClick = true;
+          }
+        }
+
+        photoInput.value = "";
+        photoInput.click();
+        window.addEventListener("focus", () => {
+          isPhotoPickerOpen = false;
+          preventCollapseUntil = performance.now() + photoPickerSettleDelay;
+          suppressNextBlankClick = true;
+        }, { once: true });
+      }
+
+      function clearLongPressTimer() {
+        window.clearTimeout(longPressTimer);
+        longPressTimer = 0;
+      }
+
+      function getCardIndexFromEvent(event) {
+        const card = event.target.closest(".card");
+        if (!card) return null;
+        const index = Number(card.dataset.index);
+        return Number.isFinite(index) ? index : null;
+      }
+
+      function beginElementPress(event) {
+        const index = getCardIndexFromEvent(event);
+        if (index === null || !addedCardIndexes.includes(index) || event.target.closest(".editor-layer")) return false;
+
+        pressCardIndex = index;
+        clearLongPressTimer();
+        longPressTimer = window.setTimeout(() => {
+          if (pressCardIndex !== index || state !== "expanded") return;
+          isElementDragging = true;
+          elementDragIndex = index;
+          isDragging = false;
+          dragInput = null;
+          velocityX = 0;
+          velocityY = 0;
+          targetVelocityX = 0;
+          targetVelocityY = 0;
+          suppressNextBlankClick = true;
+          clearCollapseTimer();
+          viewport.classList.remove("is-dragging");
+          const card = canvas.children[index];
+          card.classList.add("is-element-dragging");
+          card.style.zIndex = 120;
+          card.style.transform = `translate3d(0px, 0px, 0) rotate(${cards[index][7]}deg) scale(${Number(cards[index][8]) + 0.08})`;
+        }, elementLongPressDelay);
+
+        return true;
+      }
+
       function onWheel(event) {
         event.preventDefault();
         if (!canPan()) {
-          expandWidget();
           return;
         }
         lastWheelTime = performance.now();
@@ -898,18 +1673,28 @@
       }
 
       function onPointerDown(event) {
+        if (event.target.closest(".editor-layer")) return;
         if (!canPan()) {
-          expandWidget();
           return;
         }
         if (event.button !== 0) return;
-        isDragging = true;
-        dragInput = event.pointerId !== undefined ? "pointer" : "mouse";
-        viewport.classList.add("is-dragging");
-        if (event.pointerId !== undefined) viewport.setPointerCapture(event.pointerId);
+        if (isDragging || isElementDragging || pressCardIndex !== null) return;
+        currentPointerX = event.clientX;
+        currentPointerY = event.clientY;
         lastPointerX = event.clientX;
         lastPointerY = event.clientY;
         lastPointerTime = performance.now();
+        pointerTravel = 0;
+        suppressNextBlankClick = false;
+        dragInput = event.pointerId !== undefined ? "pointer" : "mouse";
+
+        if (beginElementPress(event)) {
+          return;
+        }
+
+        isDragging = true;
+        viewport.classList.add("is-dragging");
+        if (event.pointerId !== undefined) viewport.setPointerCapture(event.pointerId);
         velocityX = 0;
         velocityY = 0;
         targetVelocityX = 0;
@@ -917,13 +1702,43 @@
       }
 
       function onPointerMove(event) {
-        if (!isDragging) return;
-        if (dragInput === "pointer" && event.pointerId === undefined) return;
-        if (dragInput === "mouse" && event.pointerId !== undefined) return;
+        if (!isDragging && pressCardIndex === null && !isElementDragging) return;
+
         const now = performance.now();
         const deltaX = event.clientX - lastPointerX;
         const deltaY = event.clientY - lastPointerY;
         const elapsed = Math.max(16, now - lastPointerTime);
+        pointerTravel += Math.hypot(deltaX, deltaY);
+        if (pointerTravel > 6) suppressNextBlankClick = true;
+
+        if (pressCardIndex !== null && !isElementDragging && pointerTravel > 8) {
+          clearLongPressTimer();
+          pressCardIndex = null;
+        }
+
+        if (isElementDragging && elementDragIndex !== null) {
+          if (dragInput === "pointer" && event.pointerId === undefined) return;
+          if (dragInput === "mouse" && event.pointerId !== undefined) return;
+          cards[elementDragIndex][3] += deltaX;
+          cards[elementDragIndex][4] += deltaY;
+          positionCard(elementDragIndex);
+          lastPointerX = event.clientX;
+          lastPointerY = event.clientY;
+          lastPointerTime = now;
+          currentPointerX = event.clientX;
+          currentPointerY = event.clientY;
+          clearCollapseTimer();
+          return;
+        }
+
+        if (!isDragging) {
+          lastPointerX = event.clientX;
+          lastPointerY = event.clientY;
+          lastPointerTime = now;
+          return;
+        }
+        if (dragInput === "pointer" && event.pointerId === undefined) return;
+        if (dragInput === "mouse" && event.pointerId !== undefined) return;
 
         positionX += deltaX;
         positionY += deltaY;
@@ -936,6 +1751,40 @@
       }
 
       function onPointerUp(event) {
+        const releasedCardIndex = getCardIndexFromEvent(event) ?? pressCardIndex;
+        clearLongPressTimer();
+        pressCardIndex = null;
+
+        if (isElementDragging) {
+          if (dragInput === "pointer" && event.pointerId === undefined) return;
+          if (dragInput === "mouse" && event.pointerId !== undefined) return;
+          if (elementDragIndex !== null) {
+            const draggedCard = canvas.children[elementDragIndex];
+            draggedCard?.classList.remove("is-element-dragging");
+            if (draggedCard) applyExpandedCardTransform(draggedCard, elementDragIndex);
+          }
+          isElementDragging = false;
+          elementDragIndex = null;
+          dragInput = null;
+          if (event.pointerId !== undefined) viewport.releasePointerCapture(event.pointerId);
+          return;
+        }
+
+        if (!isDragging && state === "expanded" && releasedCardIndex !== null && pointerTravel <= 6) {
+          const releasedCard = canvas.children[releasedCardIndex];
+          const releasedTapedSrc = releasedCard?.querySelector(".taped-shape")?.getAttribute("src") ?? "";
+          const releasedStickySrc = releasedCard?.querySelector(".sticky-shape")?.getAttribute("src") ?? "";
+          const isReleasedPolaroid = activePolaroidSlots.includes(releasedCardIndex) || releasedTapedSrc.includes("polaroid.svg") || releasedStickySrc.includes("polaroid.svg");
+          if (isReleasedPolaroid) {
+            activeCardIndex = releasedCardIndex;
+            activeKind = "polaroid";
+            requestPhotoForIndex(releasedCardIndex);
+            suppressNextBlankClick = true;
+            if (event.pointerId !== undefined) viewport.releasePointerCapture(event.pointerId);
+            return;
+          }
+        }
+
         if (!isDragging) return;
         if (dragInput === "pointer" && event.pointerId === undefined) return;
         if (dragInput === "mouse" && event.pointerId !== undefined) return;
@@ -971,6 +1820,8 @@
       }
 
       cards.forEach(createCard);
+      pickDefaultSticky();
+      randomizeStackOrder();
       setWidgetState("collapsed");
       applyStackTransforms();
 
@@ -980,14 +1831,25 @@
       viewport.addEventListener("pointerup", onPointerUp);
       viewport.addEventListener("pointercancel", onPointerUp);
       viewport.addEventListener("mousedown", onPointerDown);
+      window.addEventListener("pointerdown", handleGlobalPointerDown, true);
+      window.addEventListener("click", handleGlobalClick, true);
       window.addEventListener("mousemove", onPointerMove);
       window.addEventListener("mouseup", onPointerUp);
-      viewport.addEventListener("mouseenter", expandWidget);
-      viewport.addEventListener("mouseleave", scheduleCollapse);
-      viewport.addEventListener("pointerenter", clearCollapseTimer);
-      viewport.addEventListener("pointerleave", scheduleCollapse);
+      viewport.addEventListener("mouseleave", scheduleReturnFromWidgetLeave);
+      viewport.addEventListener("pointerleave", scheduleReturnFromWidgetLeave);
       window.addEventListener("mousemove", trackWidgetPointer);
       window.addEventListener("pointermove", trackWidgetPointer);
+      addPlus.addEventListener("click", beginChoosing);
+      photoInput.addEventListener("change", () => {
+        const file = photoInput.files?.[0];
+        isPhotoPickerOpen = false;
+        preventCollapseUntil = performance.now() + photoPickerSettleDelay;
+        suppressNextBlankClick = true;
+        if (!file) return;
+        const targetIndex = photoTargetIndex ?? activeCardIndex;
+        applyPhotoFile(targetIndex, file);
+        photoTargetIndex = null;
+      });
       closePreview.addEventListener("click", hidePreview);
       window.addEventListener("resize", () => {
         setWidgetState(state);
